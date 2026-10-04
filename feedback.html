@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<title>Feedback</title>
+<script>
+  // One Microsoft Form for every demo. Paste the form's share link below.
+  // The demo name is passed through so you can see which preview the feedback is about:
+  // in Forms, add a short-answer question "Which preview?" then use "Get pre-filled link"
+  // and copy the parameter it adds (it looks like &r<id>=...) into PREFILL_PARAM.
+  var FORM_URL = "PASTE_YOUR_MICROSOFT_FORM_LINK_HERE";
+  var PREFILL_PARAM = "";   // e.g. "r1a2b3c4d5e6" - leave blank to skip pre-filling
+  var demo = new URLSearchParams(location.search).get("demo") || "unknown";
+  if (FORM_URL.indexOf("http") === 0) {
+    var url = FORM_URL + (PREFILL_PARAM ? (FORM_URL.indexOf("?") > -1 ? "&" : "?") + PREFILL_PARAM + "=" + encodeURIComponent(demo) : "");
+    location.replace(url);
+  }
+</script>
+<style>body{font:15px -apple-system,"Segoe UI",Roboto,sans-serif;color:#232a32;padding:40px;max-width:520px}</style>
+</head>
+<body>
+<h1>Feedback</h1>
+<p>The feedback form has not been set up yet. Email product with your thoughts on the <b id="d"></b> preview.</p>
+<script>document.getElementById('d').textContent = demo;</script>
+</body>
+</html>
