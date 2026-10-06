@@ -7,6 +7,7 @@
 <title>Home screen - Roadmap preview</title>
 <style>
   html, body { margin: 0; height: 100%; }
+  [hidden] { display: none !important; }
   .fb-btn { position: fixed; right: 18px; bottom: 18px; z-index: 70; display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; border-radius: 999px; background: #1c2230; color: #fff; font: 600 13px -apple-system, "Segoe UI", Roboto, sans-serif; text-decoration: none; box-shadow: 0 6px 20px rgba(0,0,0,.28); }
   .fb-btn:hover { background: #0b3160; }
   .fb-btn svg { width: 14px; height: 14px; }
@@ -80,6 +81,11 @@
   .view-proposed .side { overflow: visible; }
   .view-current .proposed-only { display: none !important; }
   .view-proposed .current-only { display: none !important; }
+  /* Three views: Current, Proposed (SaaS) and MS Dashboard (managed service).
+     The MS view carries view-proposed AND view-ms, so everything built for Proposed shows in both.
+     Anything that should differ uses saas-only / ms-only, or is styled under .view-ms. */
+  .view-ms .saas-only { display: none !important; }
+  .app:not(.view-ms) .ms-only { display: none !important; }
 
   /* ---------- Top bar ---------- */
   .top { background: var(--bar-bg); border-bottom: 1px solid var(--bar-border); display: flex; align-items: center; padding: 0 8px 0 6px; gap: 6px; }
@@ -111,12 +117,8 @@
   .demo-banner svg { width: 16px; height: 16px; flex: 0 0 16px; }
 
   /* ---------- Home dashboard (Proposed) ---------- */
-  .dash { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); grid-template-rows: auto auto; gap: 12px; padding: 0 8px 80px; align-items: stretch; }
-  .col { display: contents; }
-  #card-runs { grid-column: 1; grid-row: 1; }
-  #card-costs { grid-column: 1; grid-row: 2; }
-  #card-emp { grid-column: 2; grid-row: 1; }
-  #card-dates { grid-column: 2; grid-row: 2; align-self: start; }
+  .dash { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: 12px; padding: 0 8px 80px; align-items: start; }
+  .col { display: grid; gap: 12px; min-width: 0; }
   .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; padding: 16px 18px 18px; min-width: 0; }
   .card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
   .card h2 { margin: 0; font-size: 16px; font-weight: 600; color: var(--ink); }
@@ -141,6 +143,23 @@
   .pill.green { background: #e6f5e9; color: #1f7a33; }
   .pill.amber { background: var(--amber-bg); color: var(--amber-ink); }
   .pill .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  /* MS Dashboard: four-step progress pill (Input, Processing, Review, Finalised) */
+  .pill.steps { position: relative; gap: 9px; padding: 0 10px 0 9px; cursor: default; }
+  .pill.steps svg { width: 52px; height: 10px; overflow: visible; }
+  .pill.steps .st-line { stroke: #d6d9de; stroke-width: 3; }
+  .pill.steps .st-line.done { stroke: currentColor; }
+  .pill.steps .st-dot { fill: #d6d9de; }
+  .pill.steps .st-dot.done { fill: currentColor; }
+  .pill.steps:focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; }
+  .pill.steps .info-tip { width: 170px; padding: 8px 10px; text-align: left; font-weight: 500; }
+  .pill.steps:hover .info-tip, .pill.steps:focus-visible .info-tip { display: block; }
+  .step-list { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+  .step-list li { display: flex; align-items: center; gap: 8px; color: rgba(255,255,255,.55); }
+  .step-list li.done { color: #fff; }
+  .step-list li.now { color: #fff; font-weight: 600; }
+  .step-list li i { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.3); flex: 0 0 8px; }
+  .step-list li.done i, .step-list li.now i { background: #fff; }
+  .step-list li.now i { box-shadow: 0 0 0 2px rgba(255,255,255,.35); }
 
   /* Upcoming payroll */
   .runs { display: grid; gap: 10px; }
@@ -190,14 +209,6 @@
   .toggle { border: 1px solid #cfd3da; background: #fff; color: var(--ink-2); border-radius: 6px; height: 26px; padding: 0 10px; font-size: 12px; margin-left: auto; }
   .toggle:hover { background: #f3f4f6; }
 
-  /* Employees */
-  .emp-stat .n { font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; line-height: 1; }
-  .emp-stat .l { font-size: 13px; color: var(--ink-3); margin-top: 4px; }
-  .big-stat .n { font-size: 40px; }
-  .emp-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
-  .emp-row .emp-stat { border: 1px solid var(--card-border); border-radius: 6px; padding: 10px 12px; }
-  .emp-row .n { font-size: 22px; }
-
   /* Key dates */
   .dates { display: grid; }
   .date { display: grid; grid-template-columns: 52px 1fr; gap: 12px; align-items: start; padding: 10px 0; border-top: 1px solid var(--card-border); }
@@ -206,7 +217,95 @@
   .date .d small { display: block; font-size: 11px; color: var(--ink-3); font-weight: 500; text-transform: uppercase; letter-spacing: .04em; }
   .date .t { font-size: 13.5px; color: var(--ink); font-weight: 500; }
   .date .s { font-size: 12.5px; color: var(--ink-3); margin-top: 2px; }
-  .date.soon .d { color: var(--blue-ink); }
+
+  /* ---------- Employees card with split (Proposed) ---------- */
+  .ew .card-head { align-items: center; }
+  .ew .head-tools { display: flex; align-items: center; gap: 10px; }
+  .icon-btn { width: 28px; height: 28px; border-radius: 6px; border: 1px solid transparent; background: transparent; color: var(--ink-3); display: inline-grid; place-items: center; }
+  .icon-btn:hover { background: var(--grey-bg); color: var(--ink); }
+  .icon-btn:focus-visible { outline: 2px solid var(--navy); outline-offset: 1px; }
+  .icon-btn svg { width: 16px; height: 16px; }
+  .ew-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+  .ew-top .big { font-size: 34px; font-weight: 600; color: var(--ink); line-height: 1; font-variant-numeric: tabular-nums; }
+  .ew-top .cap { font-size: 12.5px; color: var(--ink-3); margin-top: 3px; }
+  .ew-moves { display: flex; gap: 14px; font-size: 12.5px; color: var(--ink-3); white-space: nowrap; }
+  .ew-moves b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .split-row { display: flex; align-items: center; gap: 8px; margin: 14px 0 10px; font-size: 13px; color: var(--ink-3); }
+  .split-row select { font: inherit; font-size: 13px; color: var(--ink); background: #fff; border: 1px solid #cfd3da; border-radius: 6px; height: 28px; padding: 0 8px; }
+  .split-row select:focus-visible { outline: 2px solid var(--navy); outline-offset: 1px; }
+  .hbars { display: grid; gap: 7px; }
+  .hbar { display: grid; grid-template-columns: 88px 1fr 28px; align-items: center; gap: 8px; font-size: 12.5px; }
+  .hbar .l { color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hbar .t { display: block; height: 12px; background: var(--grey-bg); border-radius: 3px; overflow: hidden; }
+  .hbar .f { display: block; height: 100%; background: var(--series-1); border-radius: 3px; }
+  .hbar.other .f { background: #b8bfca; }
+  .hbar.other .l { color: var(--ink-3); }
+  .hbar .n { text-align: right; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .lg .hbar { grid-template-columns: 140px 1fr 60px; font-size: 14px; gap: 12px; }
+  .lg .hbar .t { height: 22px; }
+  .lg .hbars { gap: 12px; }
+  .other-note { font-size: 11.5px; color: var(--ink-3); margin-top: 8px; }
+
+  .date-filter-row { margin: -6px 0 8px; }
+  .date-filter { font: inherit; font-size: 13px; color: var(--ink); background: #fff; border: 1px solid #cfd3da; border-radius: 6px; height: 28px; padding: 0 8px; }
+  .date-filter:focus-visible { outline: 2px solid var(--navy); outline-offset: 1px; }
+  .cal-key .date-filter { height: 32px; font-size: 14px; margin-right: 6px; }
+  .date .t { display: flex; align-items: center; gap: 7px; }
+  .date .t .dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 8px; }
+  .date .s a { color: var(--blue-ink); font-weight: 500; }
+  .date .s a:hover { text-decoration: underline; }
+  .date.today .d { color: var(--blue-ink); }
+
+  /* Payroll calendar (styled on the live Payroll Calendar page, captured 2 Oct 2026) */
+  .modal.wide { width: min(1180px, 100%); }
+  .cal-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+  .cal-key { display: flex; align-items: center; gap: 16px; font-size: 13px; color: var(--ink-2); flex-wrap: wrap; }
+  .cal-key span { display: inline-flex; align-items: center; gap: 6px; }
+  .cal-key i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  .cal-nav { display: flex; align-items: center; gap: 8px; }
+  .cal-nav button { height: 34px; padding: 6px 12px; border-radius: 7px; border: 1px solid #e9e9e9; background: #eceff1; color: #545454; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+  .cal-nav button:hover { background: #e1e5e8; }
+  .cal-nav button svg { width: 10px; height: 10px; }
+  .cal-nav .cal-month { height: 43px; padding: 8px 16px; border: 1px solid #dee2e6; border-radius: 4px; background: #fff; color: #495057; font-size: 18px; font-weight: 600; display: inline-flex; align-items: center; min-width: 150px; justify-content: center; }
+  .cal { border: 1px solid #dee2e6; border-radius: 6px; overflow: hidden; }
+  .cal-head { display: grid; grid-template-columns: repeat(7, 1fr); background: #f8f9fa; border-bottom: 1px solid #dee2e6; }
+  .cal-head div { padding: 12px; text-align: center; font-size: 14px; font-weight: 600; color: #495057; border-right: 1px solid #dee2e6; }
+  .cal-head div:last-child { border-right: 0; }
+  .cal-week { display: grid; grid-template-columns: repeat(7, 1fr); border-bottom: 1px solid #dee2e6; }
+  .cal-week:last-child { border-bottom: 0; }
+  .cal-day { min-width: 0; overflow: hidden; min-height: 110px; padding: 8px; border-right: 1px solid #dee2e6; font-size: 14px; color: #232a32; }
+  .cal-day:last-child { border-right: 0; }
+  .cal-day .num { font-weight: 600; margin-bottom: 4px; }
+  .cal-day.other { background: #f8f9fa; }
+  .cal-day.other .num { color: #adb5bd; }
+  .cal-day.nwd { background: #f1f3f5; }
+  .cal-day.nwd .num { color: #868e96; }
+  .cal-day.nwd.other { background: #f1f3f5; }
+  .cal-day .bh { display: block; font-size: 10.5px; font-weight: 500; color: #868e96; margin-top: 1px; }
+  .cal-day.has.nwd { background: #e9f1f8; }
+  .cal-day.has { background: #f0f8ff; }
+  .cal-day.today { background: #e3f2fd; box-shadow: inset 0 0 0 2px #2196f3; }
+  .cal-chip { display: flex; align-items: center; justify-content: space-between; gap: 6px; height: 24px; padding: 4px 8px; border-radius: 12px; margin: 1px 0; color: #fff; font-size: 10px; font-weight: 600; white-space: nowrap; overflow: hidden; }
+  .cal-chip .r { font-size: 9.5px; opacity: .85; font-weight: 500; overflow: hidden; text-overflow: ellipsis; }
+  .cal-chip.s-monthly { background: var(--series-1); }
+  .cal-chip.s-weekly { background: var(--series-2); color: #0b2a4a; }
+  .cal-chip.s-all { background: #6b7280; }
+
+  /* Full-screen modal */
+  .modal-backdrop[hidden] { display: none; }
+  .modal-backdrop { position: fixed; inset: 0; background: rgba(15,23,42,.45); display: grid; place-items: center; z-index: 80; padding: 24px; }
+  .modal { background: #fff; border-radius: 10px; width: min(760px, 100%); max-height: 90vh; overflow: auto; box-shadow: 0 24px 60px rgba(0,0,0,.3); }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--card-border); }
+  .modal-head h2 { margin: 0; font-size: 18px; font-weight: 600; color: var(--ink); }
+  .modal-close { border: 0; background: transparent; font-size: 16px; color: var(--ink-3); width: 32px; height: 32px; border-radius: 6px; }
+  .modal-close:hover { background: var(--grey-bg); color: var(--ink); }
+  .modal-body { padding: 20px 24px 28px; }
+  .modal-body .split-row { margin-top: 0; }
+  .modal-body .split-row select { height: 32px; font-size: 14px; }
+  .modal-table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-top: 22px; }
+  .modal-table th, .modal-table td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--card-border); }
+  .modal-table th:not(:first-child), .modal-table td:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+  .modal-table th { color: var(--ink-3); font-weight: 600; font-size: 12px; }
 
   /* ---------- Current / Proposed switch ---------- */
   .switch { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); display: flex; align-items: center; gap: 2px; padding: 3px; background: #1c2230; border-radius: 999px; box-shadow: 0 6px 20px rgba(0,0,0,.28); z-index: 50; }
@@ -217,10 +316,10 @@
   .view-tag { white-space: nowrap; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 4px 9px; border-radius: 4px; margin-right: 8px; }
   .app.view-current .view-tag { background: #e5e7eb; color: #374151; }
   .app.view-proposed .view-tag { background: #fde68a; color: #78350f; }
+  .app.view-ms .view-tag { background: #e0e7ff; color: #3730a3; }
 
   @media (max-width: 1040px) {
-    .dash { grid-template-columns: 1fr; grid-template-rows: none; }
-    #card-runs, #card-costs, #card-emp, #card-dates { grid-column: 1; grid-row: auto; }
+    .dash { grid-template-columns: 1fr; }
   }
   @media (max-width: 720px) {
     .app { grid-template-columns: 1fr; grid-template-rows: auto auto 1fr; }
@@ -234,9 +333,10 @@
 </style>
 
 <div class="app view-current" id="app">
-  <div class="switch" role="group" aria-label="Switch between current and proposed view">
+  <div class="switch" role="group" aria-label="Switch between current, proposed and managed service views">
     <button type="button" aria-pressed="true" data-view="current">Current</button>
     <button type="button" aria-pressed="false" data-view="proposed">Proposed</button>
+    <button type="button" aria-pressed="false" data-view="ms">MS Dashboard</button>
     <span class="hint">← → to flick</span>
   </div>
   <aside class="side" aria-label="Side navigation">
@@ -280,6 +380,12 @@
         <p class="subtitle">ABC Limited</p>
       </div>
     </div>
+    <div class="modal-backdrop" id="modal" hidden>
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-head"><h2 id="modalTitle">Employees</h2><button class="modal-close" type="button" id="modalClose" aria-label="Close">&#x2715;</button></div>
+        <div class="modal-body" id="modalBody"></div>
+      </div>
+    </div>
     <div class="dash proposed-only">
       <div class="col">
         <section class="card" id="card-runs" aria-labelledby="h-runs">
@@ -300,17 +406,15 @@
       </div>
 
       <div class="col">
-        <section class="card" id="card-emp" aria-labelledby="h-emp">
-          <div class="card-head"><h2 id="h-emp">Employees</h2><a class="link" href="#">People</a></div>
-          <div class="emp-stat big-stat"><div class="n">17</div><div class="l">Active employees</div></div>
-          <div class="emp-row">
-            <div class="emp-stat"><div class="n">2</div><div class="l">Starters this month</div></div>
-            <div class="emp-stat"><div class="n">1</div><div class="l">Leavers this month</div></div>
-          </div>
+        <section class="card ew" id="card-emp" aria-labelledby="h-emp">
+          <div class="card-head"><h2 id="h-emp">Employees</h2><div class="head-tools"><a class="link" href="#">People</a><button class="icon-btn" type="button" id="empExpand" title="Full screen" aria-label="Open full screen"></button></div></div>
+          <div class="ew-top"><div><div class="big">17</div><div class="cap">Active employees</div></div><div class="ew-moves"><span><b>2</b> starters this month</span><span><b>1</b> leaver</span></div></div>
+          <div id="empSplit"></div>
         </section>
 
         <section class="card" id="card-dates" aria-labelledby="h-dates">
-          <div class="card-head"><h2 id="h-dates">Key dates</h2><a class="link" href="#">Payroll calendar</a></div>
+          <div class="card-head"><h2 id="h-dates">Key dates</h2><div class="head-tools"><a class="link" href="#" id="calOpen">Payroll calendar</a><button class="icon-btn" type="button" id="calExpand" title="Open payroll calendar" aria-label="Open payroll calendar"></button></div></div>
+          <div class="date-filter-row" id="dateFilterWrap"></div>
           <div class="dates" id="dates"></div>
         </section>
       </div>
@@ -379,15 +483,33 @@
   ];
   const TAX_YEAR_START = new Date(2026, 3, 6);   // 6 April 2026
   const DAY = 86400000;
+  function addDays(d, n) { return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n); }
   function today() { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+  // England and Wales bank holidays. Enough for the demo window; the product would take these from a calendar.
+  const BANK_HOLIDAYS = {
+    "2026-01-01": "New Year's Day", "2026-04-03": "Good Friday", "2026-04-06": "Easter Monday", "2026-05-04": "Early May bank holiday",
+    "2026-05-25": "Spring bank holiday", "2026-08-31": "Summer bank holiday", "2026-12-25": "Christmas Day", "2026-12-28": "Boxing Day (substitute)",
+    "2027-01-01": "New Year's Day", "2027-03-26": "Good Friday", "2027-03-29": "Easter Monday", "2027-05-03": "Early May bank holiday",
+    "2027-05-31": "Spring bank holiday", "2027-08-30": "Summer bank holiday", "2027-12-27": "Christmas Day (substitute)", "2027-12-28": "Boxing Day (substitute)"
+  };
+  function isoDay(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+  function bankHoliday(d) { return BANK_HOLIDAYS[isoDay(d)] || null; }
+  function isWorkingDay(d) { return d.getDay() !== 0 && d.getDay() !== 6 && !bankHoliday(d); }
+  function toWorkingDayBack(d) { let x = new Date(d); while (!isWorkingDay(x)) x = addDays(x, -1); return x; }
+  // Pay dates come forward to the previous working day when they land on a weekend or bank holiday.
   function nextPayDate(sc, from) {
+    let n = nominalPayDate(sc, addDays(from, -10));
+    for (let i = 0; i < 12; i++) { const a = toWorkingDayBack(n); if (a >= from) return a; n = nominalPayDate(sc, addDays(n, 1)); }
+    return toWorkingDayBack(n);
+  }
+  function nominalPayDate(sc, from) {
     if (sc.type === "monthly") {
       let d = new Date(from.getFullYear(), from.getMonth() + 1, 0);   // last day of this month
       if (d < from) d = new Date(from.getFullYear(), from.getMonth() + 2, 0);
       return d;
     }
     let d = new Date(sc.anchor);
-    while (d < from) d = new Date(d.getTime() + 7 * DAY);
+    while (d < from) d = addDays(d, 7);
     return d;
   }
   function runName(sc, d) {
@@ -408,6 +530,28 @@
     return runs;
   }
   let RUNS = [];
+
+  // ---------- MS Dashboard: where each run is in the managed service process ----------
+  // Four steps: Input (customer sending their changes), Processing (Moorepay working on it),
+  // Review (back with the customer to check), Finalised (customer has approved).
+  // Worked out from working days left until pay day: more than 6 = Input, 4 to 6 = Processing,
+  // 2 to 3 = Review, 1 or fewer = Finalised. A Weekly payroll only has five working days, so it
+  // is Processing from Monday, Review from Tuesday and Finalised from Thursday.
+  const MS_STEPS = ['Input', 'Processing', 'Review', 'Finalised'];
+  function workingDaysUntil(d) { let n = 0, x = today(); while (x < d) { x = addDays(x, 1); if (isWorkingDay(x)) n++; } return n; }
+  function msStepFor(payDate) {
+    const wd = workingDaysUntil(payDate);
+    return wd <= 1 ? 3 : wd <= 3 ? 2 : wd <= 6 ? 1 : 0;
+  }
+  function msStepPill(step) {
+    const done = step === 3;
+    let svg = '<svg viewBox="0 0 52 10" aria-hidden="true">';
+    for (let i = 0; i < 3; i++) svg += '<line class="st-line' + (i < step ? ' done' : '') + '" x1="' + (5 + i * 14) + '" x2="' + (19 + i * 14) + '" y1="5" y2="5"/>';
+    for (let i = 0; i < 4; i++) svg += '<circle class="st-dot' + (i <= step ? ' done' : '') + '" cx="' + (5 + i * 14) + '" cy="5" r="5"/>';
+    svg += '</svg>';
+    const list = '<ul class="step-list">' + MS_STEPS.map(function (s, i) { return '<li class="' + (i < step ? 'done' : i === step ? 'now' : '') + '"><i></i>' + s + (i === step ? ' (now)' : '') + '</li>'; }).join('') + '</ul>';
+    return '<span class="pill steps ' + (done ? 'green' : 'blue') + '" tabindex="0" aria-label="Step ' + (step + 1) + ' of 4: ' + MS_STEPS[step] + '">' + svg + MS_STEPS[step] + '<span class="info-tip" role="tooltip">' + list + '</span></span>';
+  }
 
   // Cost to employer per month, £, by schedule. Only closed months are shown: the chart
   // covers the 12 months before the current one, so October appears on 1 November.
@@ -433,13 +577,90 @@
     return out;
   })();
 
-  const DATES = [
-    { d: "30 Sep", sub: "Wed", t: "Monthly pay day", s: "FPS must reach HMRC on or before this date", soon: true },
-    { d: "2 Oct", sub: "Fri", t: "Weekly pay day", s: "Week 26, FPS due the same day", soon: true },
-    { d: "22 Oct", sub: "Thu", t: "PAYE and NI payment to HMRC", s: "For September, if paying electronically" },
-    { d: "22 Oct", sub: "Thu", t: "Pension contributions to Nest", s: "For September" },
-    { d: "5 Apr", sub: "2027", t: "Tax year ends", s: "Final submission and P60s follow" },
-  ];
+  // ---------- Key dates and payroll calendar: worked out from the pay schedules ----------
+  // Per pay run: BACS due for submission (pay date minus 2 working days), pay day, pension contributions due
+  // (pay date plus 5 working days). Company-wide: PAYE and NI payment to HMRC on the 22nd of each month.
+  // Working days are Monday to Friday; bank holidays are not accounted for in the mock.
+  const SCHEDULE_COLOUR = { Monthly: 's-monthly', Weekly: 's-weekly' };
+  function addWorkingDays(d, n) {
+    let x = new Date(d), step = n < 0 ? -1 : 1, left = Math.abs(n);
+    while (left > 0) { x = addDays(x, step); if (isWorkingDay(x)) left--; }
+    return x;
+  }
+  function sameDay(a, b) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); }
+  function payDatesBetween(sc, from, to) {
+    const out = []; let d = nextPayDate(sc, addDays(from, -40));
+    while (d <= to) { if (d >= from) out.push(d); d = nextPayDate(sc, addDays(d, 1)); }
+    return out;
+  }
+  // Events whose own date falls between from and to (inclusive). Pay runs are looked at over a wider window so
+  // a BACS date or a pension date can fall inside the window even when its pay day does not.
+  function eventsBetween(from, to) {
+    const ev = [];
+    SCHEDULES.forEach(function (sc) {
+      payDatesBetween(sc, addDays(from, -20), addDays(to, 20)).forEach(function (pd) {
+        const run = runName(sc, pd);
+        ev.push({ date: addWorkingDays(pd, -2), kind: 'bacs', schedule: sc.name, title: sc.name + ' BACS due for submission', sub: run + ' · pays ' + fmtShort(pd), chip: 'BACS due' });
+        ev.push({ date: pd, kind: 'pay', schedule: sc.name, title: sc.name + ' pay day', sub: run + ' · FPS due on or before pay day', chip: 'Pay day' });
+        ev.push({ date: addWorkingDays(pd, 5), kind: 'pension', schedule: sc.name, title: sc.name + ' pension contributions due', sub: run + ' · Nest', chip: null });
+      });
+    });
+    for (let m = new Date(from.getFullYear(), from.getMonth() - 1, 1); m <= to; m = new Date(m.getFullYear(), m.getMonth() + 1, 1)) {
+      const d = toWorkingDayBack(new Date(m.getFullYear(), m.getMonth(), 22));
+      const prev = new Date(m.getFullYear(), m.getMonth() - 1, 1);
+      ev.push({ date: d, kind: 'hmrc', schedule: null, title: 'PAYE and NI payment to HMRC', sub: 'For ' + prev.toLocaleDateString('en-GB', { month: 'long' }) + ', if paying electronically · <a href="#">View P32</a>', chip: 'HMRC payment due' });
+    }
+    return ev.filter(function (e) { return e.date >= from && e.date <= to; }).sort(function (a, b) { return a.date - b.date || ['bacs', 'pay', 'pension', 'hmrc'].indexOf(a.kind) - ['bacs', 'pay', 'pension', 'hmrc'].indexOf(b.kind); });
+  }
+  function fmtShort(d) { return d.getDate() + ' ' + d.toLocaleDateString('en-GB', { month: 'short' }).slice(0, 3); }
+  function dotFor(e) { return e.schedule ? '<i class="dot" style="background:' + (e.schedule === 'Monthly' ? 'var(--series-1)' : 'var(--series-2)') + '"></i>' : '<i class="dot" style="background:#6b7280"></i>'; }
+  let dateFilter = 'all';   // 'all' or a schedule name; shared by the Key dates card and the calendar
+  function filterSelect(id) {
+    return '<select id="' + id + '" class="date-filter" aria-label="Show key dates for"><option value="all"' + (dateFilter === 'all' ? ' selected' : '') + '>All payrolls</option>'
+      + SCHEDULES.map(function (sc) { return '<option value="' + sc.name + '"' + (dateFilter === sc.name ? ' selected' : '') + '>' + sc.name + '</option>'; }).join('') + '</select>';
+  }
+  function applyFilter(ev) { return ev.filter(function (e) { return dateFilter === 'all' || !e.schedule || e.schedule === dateFilter; }); }
+  function renderDates() {
+    const t = today();
+    document.getElementById('dateFilterWrap').innerHTML = filterSelect('dateFilterSmall');
+    document.getElementById('dates').innerHTML = applyFilter(eventsBetween(t, addDays(t, 120))).slice(0, 5).map(function (e) {
+      return '<div class="date' + (sameDay(e.date, t) ? ' today' : '') + '"><div class="d">' + fmtShort(e.date) + '<small>' + (sameDay(e.date, t) ? 'Today' : e.date.toLocaleDateString('en-GB', { weekday: 'short' })) + '</small></div><div><div class="t">' + dotFor(e) + e.title + '</div><div class="s">' + e.sub + '</div></div></div>';
+    }).join('');
+  }
+
+  // Calendar
+  let calMonth = null;   // first of the month on show
+  function renderCalendar() {
+    const t = today(), y = calMonth.getFullYear(), m = calMonth.getMonth();
+    const first = new Date(y, m, 1), start = addDays(first, -((first.getDay() + 6) % 7));   // Monday on or before the 1st
+    const last = new Date(y, m + 1, 0), end = addDays(last, (7 - last.getDay()) % 7);   // Sunday on or after the last
+    const ev = applyFilter(eventsBetween(start, end)).filter(function (e) { return e.chip; });
+    let weeks = '', d = new Date(start);
+    while (d <= end) {
+      weeks += '<div class="cal-week">';
+      for (let i = 0; i < 7; i++) {
+        const dayEv = ev.filter(function (e) { return sameDay(e.date, d); });
+        const bh = bankHoliday(d);
+        const cls = 'cal-day' + (d.getMonth() !== m ? ' other' : '') + (!isWorkingDay(d) ? ' nwd' : '') + (sameDay(d, t) ? ' today' : dayEv.length ? ' has' : '');
+        weeks += '<div class="' + cls + '"><div class="num">' + d.getDate() + (bh ? '<span class="bh">' + bh + '</span>' : '') + '</div>' + dayEv.map(function (e) {
+          return '<div class="cal-chip ' + (e.schedule ? SCHEDULE_COLOUR[e.schedule] : 's-all') + '" title="' + e.title + '"><span>' + e.chip + '</span>' + (e.schedule ? '<span class="r">' + e.schedule + '</span>' : '') + '</div>';
+        }).join('') + '</div>';
+        d = addDays(d, 1);
+      }
+      weeks += '</div>';
+    }
+    document.getElementById('modalBody').innerHTML =
+      '<div class="cal-top"><div class="cal-key">' + filterSelect('dateFilterLarge') + '<span><i style="background:var(--series-1)"></i>Monthly</span><span><i style="background:var(--series-2)"></i>Weekly</span><span><i style="background:#6b7280"></i>All payrolls (HMRC)</span><span><i style="background:#eef0f3;border:1px solid #d5d9e0"></i>Non-working day</span></div>'
+      + '<div class="cal-nav"><button type="button" id="calPrev"><svg viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M8 1 2 8l6 7"/></svg>Previous month</button><span class="cal-month">' + calMonth.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }) + '</span><button type="button" id="calNext">Next month<svg viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m2 1 6 7-6 7"/></svg></button></div></div>'
+      + '<div class="cal"><div class="cal-head"><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div></div>' + weeks + '</div>';
+    document.getElementById('calPrev').addEventListener('click', function () { calMonth = new Date(y, m - 1, 1); renderCalendar(); });
+    document.getElementById('calNext').addEventListener('click', function () { calMonth = new Date(y, m + 1, 1); renderCalendar(); });
+  }
+  function openCalendar(e) {
+    if (e) e.preventDefault();
+    const t = today(); calMonth = new Date(t.getFullYear(), t.getMonth(), 1);
+    openModal('calendar');
+  }
 
   // ================================================================
   // Icons - real product icons (nav-icons.json) plus home and crown for Proposed.
@@ -488,7 +709,8 @@
     document.getElementById('runs').innerHTML = RUNS.map(function (r) {
       return '<div class="run">'
         + '<div class="when"><div class="day">' + r.day + '</div><div class="mon">' + r.mon + '</div></div>'
-        + '<div class="what"><div class="name">' + r.schedule + ' · ' + r.run + '<span class="pill ' + r.statusClass + '"><i class="dot"></i>' + r.status + '</span></div>'
+        + '<div class="what"><div class="name">' + r.schedule + ' · ' + r.run
+        + (view === 'ms' ? msStepPill(msStepFor(r.date)) : '<span class="pill ' + r.statusClass + '"><i class="dot"></i>' + r.status + '</span>') + '</div>'
         + '<div class="meta"><b>' + r.employees + ' Employees</b></div></div>'
         + '<div class="do"><span class="countdown">' + (r.daysAway === 0 ? 'Pay day today' : r.daysAway === 1 ? 'Pay day tomorrow' : 'Pay day in ' + r.daysAway + ' days') + '</span>'
         + '<a class="btn btn-secondary" href="#">View</a></div>'
@@ -564,18 +786,80 @@
     });
   }
 
-  function renderDates() {
-    document.getElementById('dates').innerHTML = DATES.map(function (d) {
-      return '<div class="date' + (d.soon ? ' soon' : '') + '"><div class="d">' + d.d + '<small>' + d.sub + '</small></div><div><div class="t">' + d.t + '</div><div class="s">' + d.s + '</div></div></div>';
-    }).join('');
-  }
 
   (function () { const h = new Date().getHours(); document.getElementById('greeting').textContent = (h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening') + ', Alex'; })();
   renderKpis(); renderChart(); renderDates();
 
+  // ---------- Employees card: split by Age / Gender / Department (Proposed) ----------
+  // Rule for Department on the dashboard: the four departments with the most employees, everything
+  // else grouped as Other. The full-screen view lists every department. The chosen split is remembered.
+  const SPLITS = {
+    department: { label: "Department", groups: [["Operations", 6], ["Sales", 4], ["Finance", 3], ["Marketing", 2], ["Admin", 1], ["IT", 1]], top: 4 },
+    age: { label: "Age", groups: [["Under 25", 3], ["25 - 34", 6], ["35 - 44", 4], ["45 - 54", 3], ["55 and over", 1]] },
+    gender: { label: "Gender", groups: [["Female", 9], ["Male", 8]] },
+  };
+  let split = 'department';
+  try { const saved = localStorage.getItem('mp-home-split'); if (SPLITS[saved]) split = saved; } catch (e) {}
+
+  function groupsFor(key, full) {
+    const sp = SPLITS[key];
+    if (full || !sp.top || sp.groups.length <= sp.top + 1) return { rows: sp.groups.slice(), other: null };
+    const sorted = sp.groups.slice().sort(function (a, b) { return b[1] - a[1]; });
+    const top = sorted.slice(0, sp.top), rest = sorted.slice(sp.top);
+    return { rows: top.concat([["Other", rest.reduce(function (a, x) { return a + x[1]; }, 0)]]), other: rest.map(function (x) { return x[0]; }) };
+  }
+  function splitSelect(id) {
+    return '<div class="split-row"><label for="' + id + '">Split by</label><select id="' + id + '" class="split-select">'
+      + Object.keys(SPLITS).map(function (k) { return '<option value="' + k + '"' + (k === split ? ' selected' : '') + '>' + SPLITS[k].label + '</option>'; }).join('')
+      + '</select></div>';
+  }
+  function bars(rows, lg) {
+    const max = Math.max.apply(null, rows.map(function (x) { return x[1]; }));
+    return '<div class="hbars' + (lg ? ' lg' : '') + '">' + rows.map(function (x) {
+      return '<div class="hbar' + (x[0] === 'Other' ? ' other' : '') + '"><span class="l" title="' + x[0] + '">' + x[0] + '</span><span class="t"><span class="f" style="width:' + (x[1] / max * 100) + '%"></span></span><span class="n">' + x[1] + '</span></div>';
+    }).join('') + '</div>';
+  }
+  function renderEmpSplit() {
+    const g = groupsFor(split, false);
+    document.getElementById('empSplit').innerHTML = splitSelect('splitSmall') + bars(g.rows, false)
+      + (g.other ? '<div class="other-note">Other: ' + g.other.join(', ') + '. Open full screen to see every department.</div>' : '');
+  }
+  function renderModal() {
+    const g = groupsFor(split, true), tot = g.rows.reduce(function (a, x) { return a + x[1]; }, 0);
+    document.getElementById('modalBody').innerHTML = splitSelect('splitLarge') + '<div class="lg">' + bars(g.rows, true) + '</div>'
+      + '<table class="modal-table"><thead><tr><th>' + SPLITS[split].label + '</th><th>Employees</th><th>Share</th></tr></thead><tbody>'
+      + g.rows.map(function (x) { return '<tr><td>' + x[0] + '</td><td>' + x[1] + '</td><td>' + Math.round(x[1] / tot * 100) + '%</td></tr>'; }).join('')
+      + '<tr><td><b>Total</b></td><td><b>' + tot + '</b></td><td>100%</td></tr></tbody></table>';
+  }
+  const EXPAND_ICON = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2h4v4M6 14H2v-4M14 2 9.5 6.5M2 14l4.5-4.5"/></svg>';
+  document.getElementById('empExpand').innerHTML = EXPAND_ICON;
+  let modalOpen = false;   // false, 'employees' or 'calendar'
+  function openModal(which) {
+    modalOpen = which;
+    document.getElementById('modalTitle').textContent = which === 'calendar' ? 'Payroll calendar' : 'Employees';
+    document.querySelector('.modal').classList.toggle('wide', which === 'calendar');
+    if (which === 'calendar') renderCalendar(); else renderModal();
+    document.getElementById('modal').hidden = false; document.getElementById('modalClose').focus();
+  }
+  function closeModal() { const was = modalOpen; modalOpen = false; document.getElementById('modal').hidden = true; document.getElementById(was === 'calendar' ? 'calExpand' : 'empExpand').focus(); }
+  function setSplit(v) { split = v; try { localStorage.setItem('mp-home-split', v); } catch (e) {} renderEmpSplit(); if (modalOpen === 'employees') renderModal(); }
+  document.getElementById('calExpand').innerHTML = EXPAND_ICON;
+  document.getElementById('calOpen').addEventListener('click', openCalendar);
+  document.getElementById('calExpand').addEventListener('click', openCalendar);
+  document.getElementById('empExpand').addEventListener('click', function () { openModal('employees'); });
+  document.addEventListener('change', function (e) {
+    if (e.target.matches('.split-select')) setSplit(e.target.value);
+    if (e.target.matches('.date-filter')) { dateFilter = e.target.value; renderDates(); if (modalOpen === 'calendar') renderCalendar(); }
+  });
+  document.getElementById('modal').addEventListener('click', function (e) { if (e.target.id === 'modal' || e.target.closest('#modalClose')) closeModal(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && modalOpen) closeModal(); });
+  renderEmpSplit();
+
   // ---------- View switching ----------
-  const VIEW_ORDER = ['current', 'proposed'];
-  const VIEW_LABEL = { current: 'Current', proposed: 'Proposed' };
+  // Views: current (People page, no home screen), proposed (SaaS dashboard), ms (managed service dashboard).
+  // The MS view started on 2 Oct 2026 as a straight copy of Proposed; its differences are layered on from there.
+  const VIEW_ORDER = ['current', 'proposed', 'ms'];
+  const VIEW_LABEL = { current: 'Current', proposed: 'Proposed', ms: 'MS Dashboard' };
   let view = 'current';
   try { const saved = localStorage.getItem('mp-home-view'); if (VIEW_ORDER.indexOf(saved) > 0) view = saved; } catch (e) {}
   function setView(v) {
@@ -583,6 +867,7 @@
     const app = document.getElementById('app');
     app.classList.toggle('view-current', v === 'current');
     app.classList.toggle('view-proposed', v !== 'current');
+    app.classList.toggle('view-ms', v === 'ms');
     document.getElementById('viewTag').textContent = VIEW_LABEL[v];
     document.querySelectorAll('.switch button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.view === v)); });
     renderNav(v === 'current' ? NAV_CURRENT : NAV_PROPOSED);
@@ -591,7 +876,7 @@
   }
   document.querySelectorAll('.switch button').forEach(function (b) { b.addEventListener('click', function () { setView(b.dataset.view); }); });
   document.addEventListener('keydown', function (e) {
-    if (e.target.matches('input, textarea')) return;
+    if (e.target.matches('input, textarea, select') || modalOpen) return;
     const i = VIEW_ORDER.indexOf(view);
     if (e.key === 'ArrowLeft' && i > 0) setView(VIEW_ORDER[i - 1]);
     if (e.key === 'ArrowRight' && i < VIEW_ORDER.length - 1) setView(VIEW_ORDER[i + 1]);
@@ -603,8 +888,10 @@
     document.querySelectorAll('.nav-item.active').forEach(function (x) { x.classList.remove('active'); });
     a.classList.add('active');
   });
-  document.querySelectorAll('.dash a[href="#"], .card-head a').forEach(function (a) { a.addEventListener('click', function (e) { e.preventDefault(); }); });
+  document.querySelectorAll('.dash a[href="#"]').forEach(function (a) { if (a.id !== 'calOpen') a.addEventListener('click', function (e) { e.preventDefault(); }); });
+  document.getElementById('modal').addEventListener('click', function (e) { if (e.target.matches('a[href="#"]')) e.preventDefault(); });
 </script>
+
 
 
 <a class="fb-btn" href="../feedback.html?demo=home-screen" target="_blank" rel="noopener" title="Tell us what you think of this preview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Give feedback</a>
