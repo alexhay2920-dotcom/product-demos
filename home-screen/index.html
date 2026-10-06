@@ -4,17 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Home screen - Roadmap preview</title>
-<style>
-  html, body { margin: 0; height: 100%; }
-  [hidden] { display: none !important; }
-  .fb-btn { position: fixed; right: 18px; bottom: 18px; z-index: 70; display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; border-radius: 999px; background: #1c2230; color: #fff; font: 600 13px -apple-system, "Segoe UI", Roboto, sans-serif; text-decoration: none; box-shadow: 0 6px 20px rgba(0,0,0,.28); }
-  .fb-btn:hover { background: #0b3160; }
-  .fb-btn svg { width: 14px; height: 14px; }
-</style>
-</head>
-<body>
-
+<title>Moorepay Payroll Home - Roadmap preview</title>
 <style>
   :root {
     --side-w: 230px;
@@ -173,6 +163,7 @@
   .run .what .meta b { color: var(--ink-2); font-weight: 600; }
   .run .do { display: flex; align-items: center; gap: 12px; }
   .run .countdown { font-size: 13px; color: var(--ink-3); white-space: nowrap; }
+  .run .countdown.action { color: var(--ink); font-weight: 600; }
 
 
   /* Payroll costs chart */
@@ -331,6 +322,8 @@
   }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
+</head>
+<body>
 
 <div class="app view-current" id="app">
   <div class="switch" role="group" aria-label="Switch between current, proposed and managed service views">
@@ -522,7 +515,7 @@
       const d = nextPayDate(sc, t);
       const daysAway = Math.round((d - t) / DAY);
       const finalised = daysAway <= 1;
-      return { schedule: sc.name, run: runName(sc, d), employees: sc.employees, date: d, daysAway: daysAway,
+      return { schedule: sc.name, sc: sc, run: runName(sc, d), employees: sc.employees, date: d, daysAway: daysAway,
         day: String(d.getDate()), mon: d.toLocaleDateString('en-GB', { month: 'short' }).slice(0, 3),
         status: finalised ? "Finalised" : "In progress", statusClass: finalised ? "green" : "blue" };
     }).sort(function (a, b) { return a.date - b.date; });
@@ -533,16 +526,45 @@
 
   // ---------- MS Dashboard: where each run is in the managed service process ----------
   // Four steps: Input (customer sending their changes), Processing (Moorepay working on it),
-  // Review (back with the customer to check), Finalised (customer has approved).
-  // Worked out from working days left until pay day: more than 6 = Input, 4 to 6 = Processing,
-  // 2 to 3 = Review, 1 or fewer = Finalised. A Weekly payroll only has five working days, so it
-  // is Processing from Monday, Review from Tuesday and Finalised from Thursday.
+  // Review (back with the customer to check and approve), Finalised (customer has approved).
+  // Each run has two customer deadlines, worked out from the pay date with the same working-day
+  // and bank holiday rules as the rest of the page:
+  //   Input due     Monthly: 5 working days before pay day.  Weekly: the Tuesday of pay week.
+  //   Approval due  2 working days before pay day (the same day BACS has to be submitted), both schedules.
+  // The step follows the dates: on or before Input due = Input, then Processing, Approval due day = Review,
+  // after that = Finalised. A Weekly run goes straight from Input (Tue) to Review (Wed), so Processing
+  // never shows for Weekly.
   const MS_STEPS = ['Input', 'Processing', 'Review', 'Finalised'];
-  function workingDaysUntil(d) { let n = 0, x = today(); while (x < d) { x = addDays(x, 1); if (isWorkingDay(x)) n++; } return n; }
-  function msStepFor(payDate) {
-    const wd = workingDaysUntil(payDate);
-    return wd <= 1 ? 3 : wd <= 3 ? 2 : wd <= 6 ? 1 : 0;
+  function msDates(sc, payDate) {
+    let inputDue;
+    if (sc.type === 'weekly') {
+      const nominalFriday = addDays(payDate, (5 - payDate.getDay() + 7) % 7);   // the Friday of pay week, even if pay day was brought forward
+      inputDue = toWorkingDayBack(addDays(nominalFriday, -3));
+    } else {
+      inputDue = addWorkingDays(payDate, -5);
+    }
+    return { inputDue: inputDue, approvalDue: addWorkingDays(payDate, -2) };
   }
+  function msStepFor(sc, payDate) {
+    const t = today(), d = msDates(sc, payDate);
+    if (t <= d.inputDue) return 0;
+    if (t < d.approvalDue) return 1;
+    if (sameDay(t, d.approvalDue)) return 2;
+    return 3;
+  }
+  // What the customer needs to do next, for the callout on the row.
+  function msNextAction(sc, payDate, daysAway) {
+    const t = today(), d = msDates(sc, payDate), step = msStepFor(sc, payDate);
+    const rel = function (x) {
+      const n = Math.round((x - t) / DAY);
+      return n === 0 ? 'today' : n === 1 ? 'tomorrow' : 'by ' + fmtDay(x) + ' (' + n + ' days)';
+    };
+    if (step === 0) return 'Input due ' + rel(d.inputDue);
+    if (step === 1) return 'With Moorepay · review from ' + fmtDay(d.approvalDue);
+    if (step === 2) return 'Approval due ' + rel(d.approvalDue);
+    return daysAway === 0 ? 'Pay day today' : daysAway === 1 ? 'Pay day tomorrow' : 'Pay day in ' + daysAway + ' days';
+  }
+  function fmtDay(d) { return d.toLocaleDateString('en-GB', { weekday: 'short' }) + ' ' + d.getDate() + ' ' + d.toLocaleDateString('en-GB', { month: 'short' }).slice(0, 3); }
   function msStepPill(step) {
     const done = step === 3;
     let svg = '<svg viewBox="0 0 52 10" aria-hidden="true">';
@@ -600,6 +622,11 @@
     SCHEDULES.forEach(function (sc) {
       payDatesBetween(sc, addDays(from, -20), addDays(to, 20)).forEach(function (pd) {
         const run = runName(sc, pd);
+        if (view === 'ms') {
+          const md = msDates(sc, pd);
+          ev.push({ date: md.inputDue, kind: 'input', schedule: sc.name, title: sc.name + ' input due', sub: run + ' · send your changes to Moorepay', chip: 'Input due' });
+          ev.push({ date: md.approvalDue, kind: 'approval', schedule: sc.name, title: sc.name + ' approval due', sub: run + ' · check and approve your payroll', chip: 'Approval due' });
+        }
         ev.push({ date: addWorkingDays(pd, -2), kind: 'bacs', schedule: sc.name, title: sc.name + ' BACS due for submission', sub: run + ' · pays ' + fmtShort(pd), chip: 'BACS due' });
         ev.push({ date: pd, kind: 'pay', schedule: sc.name, title: sc.name + ' pay day', sub: run + ' · FPS due on or before pay day', chip: 'Pay day' });
         ev.push({ date: addWorkingDays(pd, 5), kind: 'pension', schedule: sc.name, title: sc.name + ' pension contributions due', sub: run + ' · Nest', chip: null });
@@ -610,7 +637,7 @@
       const prev = new Date(m.getFullYear(), m.getMonth() - 1, 1);
       ev.push({ date: d, kind: 'hmrc', schedule: null, title: 'PAYE and NI payment to HMRC', sub: 'For ' + prev.toLocaleDateString('en-GB', { month: 'long' }) + ', if paying electronically · <a href="#">View P32</a>', chip: 'HMRC payment due' });
     }
-    return ev.filter(function (e) { return e.date >= from && e.date <= to; }).sort(function (a, b) { return a.date - b.date || ['bacs', 'pay', 'pension', 'hmrc'].indexOf(a.kind) - ['bacs', 'pay', 'pension', 'hmrc'].indexOf(b.kind); });
+    return ev.filter(function (e) { return e.date >= from && e.date <= to; }).sort(function (a, b) { const ORDER = ['input', 'approval', 'bacs', 'pay', 'pension', 'hmrc']; return a.date - b.date || ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind); });
   }
   function fmtShort(d) { return d.getDate() + ' ' + d.toLocaleDateString('en-GB', { month: 'short' }).slice(0, 3); }
   function dotFor(e) { return e.schedule ? '<i class="dot" style="background:' + (e.schedule === 'Monthly' ? 'var(--series-1)' : 'var(--series-2)') + '"></i>' : '<i class="dot" style="background:#6b7280"></i>'; }
@@ -710,9 +737,9 @@
       return '<div class="run">'
         + '<div class="when"><div class="day">' + r.day + '</div><div class="mon">' + r.mon + '</div></div>'
         + '<div class="what"><div class="name">' + r.schedule + ' · ' + r.run
-        + (view === 'ms' ? msStepPill(msStepFor(r.date)) : '<span class="pill ' + r.statusClass + '"><i class="dot"></i>' + r.status + '</span>') + '</div>'
+        + (view === 'ms' ? msStepPill(msStepFor(r.sc, r.date)) : '<span class="pill ' + r.statusClass + '"><i class="dot"></i>' + r.status + '</span>') + '</div>'
         + '<div class="meta"><b>' + r.employees + ' Employees</b></div></div>'
-        + '<div class="do"><span class="countdown">' + (r.daysAway === 0 ? 'Pay day today' : r.daysAway === 1 ? 'Pay day tomorrow' : 'Pay day in ' + r.daysAway + ' days') + '</span>'
+        + '<div class="do"><span class="countdown' + (view === 'ms' && msStepFor(r.sc, r.date) < 3 ? ' action' : '') + '">' + (view === 'ms' ? msNextAction(r.sc, r.date, r.daysAway) : (r.daysAway === 0 ? 'Pay day today' : r.daysAway === 1 ? 'Pay day tomorrow' : 'Pay day in ' + r.daysAway + ' days')) + '</span>'
         + '<a class="btn btn-secondary" href="#">View</a></div>'
         + '</div>';
     }).join('');
@@ -788,7 +815,7 @@
 
 
   (function () { const h = new Date().getHours(); document.getElementById('greeting').textContent = (h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening') + ', Alex'; })();
-  renderKpis(); renderChart(); renderDates();
+  renderKpis(); renderChart();
 
   // ---------- Employees card: split by Age / Gender / Department (Proposed) ----------
   // Rule for Department on the dashboard: the four departments with the most employees, everything
@@ -872,6 +899,7 @@
     document.querySelectorAll('.switch button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.view === v)); });
     renderNav(v === 'current' ? NAV_CURRENT : NAV_PROPOSED);
     renderRuns();
+    if (typeof renderDates === 'function') { renderDates(); if (modalOpen === 'calendar') renderCalendar(); }
     try { localStorage.setItem('mp-home-view', v); } catch (e) {}
   }
   document.querySelectorAll('.switch button').forEach(function (b) { b.addEventListener('click', function () { setView(b.dataset.view); }); });
@@ -894,6 +922,11 @@
 
 
 
-<a class="fb-btn" href="../feedback.html?demo=home-screen" target="_blank" rel="noopener" title="Tell us what you think of this preview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Give feedback</a>
+<style>
+  .feedback-fab { position: fixed; right: 18px; bottom: 18px; z-index: 70; display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 14px; border-radius: 999px; background: #002654; color: #fff; font: 600 13px -apple-system, "system-ui", "Segoe UI", Roboto, sans-serif; text-decoration: none; box-shadow: 0 6px 20px rgba(0,0,0,.25); }
+  .feedback-fab:hover { background: #0b3160; }
+  .feedback-fab svg { width: 15px; height: 15px; }
+</style>
+<a class="feedback-fab" href="../feedback.html?demo=home-screen" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Give feedback</a>
 </body>
 </html>
