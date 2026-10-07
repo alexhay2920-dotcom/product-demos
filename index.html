@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Moorepay Payroll - Roadmap previews</title>
 <style>
-  :root { --navy: #002654; --ink: #1b1b1d; --ink-2: #4a4a4f; --bg: #f2f0f2; --card: #fcfcfc; --line: #c3c6cf; --accent: #6563de; --amber-bg: #fde68a; --amber-ink: #78350f; }
+  :root { --navy: #002654; --ink: #1b1b1d; --ink-2: #4a4a4f; --bg: #f2f0f2; --card: #fcfcfc; --line: #c3c6cf; --accent: #6563de; --amber-bg: #fde68a; --amber-ink: #78350f; --muted: #6b7280; }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink-2); font: 15px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif; }
   .wrap { max-width: 880px; margin: 0 auto; padding: 48px 20px 64px; }
@@ -14,13 +14,22 @@
   h1 { color: var(--ink); font-size: 30px; margin: 8px 0 6px; }
   .lede { margin: 0 0 24px; max-width: 620px; }
   .note { display: inline-flex; align-items: center; gap: 8px; background: var(--amber-bg); color: var(--amber-ink); font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 6px; margin-bottom: 32px; }
+  .area { margin-bottom: 36px; }
+  .area h2 { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
-  .card { display: block; background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 18px 20px; color: inherit; text-decoration: none; }
+  .card { display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 18px 20px; color: inherit; text-decoration: none; }
   .card:hover { border-color: var(--accent); box-shadow: 0 4px 16px rgba(0,0,0,.06); }
-  .card h2 { margin: 0 0 6px; font-size: 17px; color: var(--ink); }
-  .card p { margin: 0 0 10px; font-size: 14px; }
-  .card .meta { font-size: 12px; color: #6b7280; }
-  footer { margin-top: 48px; font-size: 12.5px; color: #6b7280; }
+  .card .head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+  .card h3 { margin: 0; font-size: 17px; color: var(--ink); }
+  .card p { margin: 0 0 12px; font-size: 14px; flex: 1; }
+  .card .meta { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 10px; }
+  .card .meta .epic { color: var(--accent); }
+  .tag { flex: 0 0 auto; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
+  .tag.concept { background: #ede9fe; color: #5b21b6; }
+  .tag.design { background: #dbeafe; color: #1e40af; }
+  .tag.build { background: #dcfce7; color: #166534; }
+  .tag.released { background: #e5e7eb; color: #374151; }
+  footer { margin-top: 48px; font-size: 12.5px; color: var(--muted); }
 </style>
 </head>
 <body>
@@ -30,24 +39,32 @@
   <p class="lede">Working previews of features we are building. Each one is a concept built ahead of the real thing, using made-up data.</p>
   <div class="note">Roadmap preview - subject to change</div>
 
-  <div class="grid" id="demos">
-    <!-- DEMOS: one card per demo. Keep this list in step with the folders. -->
-    <a class="card" href="home-screen/">
-      <h2>Home screen</h2>
-      <p>A home page with upcoming payroll, costs, employees and key dates. Flick between Current, Proposed and the MS Dashboard for managed service customers.</p>
-      <div class="meta">Added 2 Oct 2026 · Updated 6 Oct 2026</div>
-    </a>
-    <a class="card" href="pay-run-summary/">
-      <h2>Pay Run Summary</h2>
-      <p>An AI-written summary of the pay run before you approve it: what changed, what to check, and why. Flick between Current, Proposed MVP and Proposed Aim.</p>
-      <div class="meta">Added 7 Oct 2026</div>
-    </a>
-    <a class="card" href="run-payroll/">
-      <h2>Run Payroll</h2>
-      <p>The monthly pay run rebuilt around calculated-by-default payslips: a slim header, Overview, Payslips, Pay Notes, Reports and Exceptions tabs, and one Continue button. Flick between Current and Proposed.</p>
-      <div class="meta">Added 7 Oct 2026</div>
-    </a>
-  </div>
+  <!--
+    DEMOS: one card per demo, grouped by product area. Keep this list in step with the folders.
+    Card fields: title, status tag (concept | design | build | released), one-line description,
+    meta line: Owner · Added/Updated date · optional epic link.
+  -->
+
+  <section class="area" id="area-payroll">
+    <h2>Payroll</h2>
+    <div class="grid">
+      <a class="card" href="home-screen/">
+        <div class="head"><h3>Home screen</h3><span class="tag design">In design</span></div>
+        <p>A home page with upcoming payroll, costs, employees and key dates. Flick between Current, Proposed and the MS Dashboard for managed service customers.</p>
+        <div class="meta"><span>Alex Hay</span><span>Added 2 Oct 2026 · Updated 7 Oct 2026</span></div>
+      </a>
+      <a class="card" href="pay-run-summary/">
+        <div class="head"><h3>Pay Run Summary</h3><span class="tag concept">Concept</span></div>
+        <p>An AI-written summary of the pay run before you approve it: what changed, what to check, and why. Flick between Current, Proposed MVP and Proposed Aim.</p>
+        <div class="meta"><span>Alex Hay</span><span>Added 7 Oct 2026</span></div>
+      </a>
+      <a class="card" href="run-payroll/">
+        <div class="head"><h3>Run Payroll</h3><span class="tag design">In design</span></div>
+        <p>The monthly pay run rebuilt around calculated-by-default payslips: a slim header, Overview, Payslips, Pay Notes, Reports and Exceptions tabs, and one Continue button. Flick between Current and Proposed.</p>
+        <div class="meta"><span>Alex Hay</span><span>Added 7 Oct 2026</span></div>
+      </a>
+    </div>
+  </section>
 
   <footer>Internal use. These previews show what we are exploring, not what has been released. Dates and scope are confirmed by Product before anything is promised to a customer.</footer>
 </div>
