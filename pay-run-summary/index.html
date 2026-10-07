@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Pay Run Summary - Roadmap preview</title>
+<style>
+  .demo-banner { display: flex; align-items: center; justify-content: center; gap: 8px; background: #fde68a; color: #78350f; font-size: 13px; font-weight: 600; padding: 9px 16px; border-bottom: 1px solid #f5d76e; }
+  .demo-banner svg { width: 16px; height: 16px; flex: 0 0 16px; }
+  .fb-btn { position: fixed; right: 18px; bottom: 18px; z-index: 70; display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; border-radius: 999px; background: #1c2230; color: #fff; font: 600 13px -apple-system, "Segoe UI", Roboto, sans-serif; text-decoration: none; box-shadow: 0 6px 20px rgba(0,0,0,.28); }
+  .fb-btn:hover { background: #0b3160; }
+  .fb-btn svg { width: 14px; height: 14px; }
+</style>
+</head>
+<body style="margin:0">
+<style>
+  /* Layout: Moorepay Payroll shell (230px navy sidebar, 48px top bar) with the pay run summary page rebuilt inside it.
+     Tokens come from the project's design-tokens.md. Product is single-theme light. */
+  :root {
+    --side-w: 230px;
+    --top-h: 48px;
+    --navy: #002654;
+    --navy-active: rgba(0,0,0,.2);
+    --navy-sub: rgba(0,0,0,.15);
+    --nav-text: rgba(255,255,255,.6);
+    --nav-text-active: #fff;
+    --nav-label: rgba(255,255,255,.55);
+    --bar-bg: #fff;
+    --bar-border: #d5d6dc;
+    --chip-bg: #eaecf1;
+    --chip-text: #000;
+    --chip-muted: #6b7280;
+    --page-bg: #f7f7f9;
+    --card-bg: #fff;
+    --card-border: #e5e6ea;
+    --ink: #000;
+    --ink-2: #232a32;
+    --muted: #6b7280;
+    --faint: #9aa0a8;
+    --green: #3fb050;
+    --teal: #3a9f8a;
+    --btn-navy: #1f2d4d;
+    --link: #2563eb;
+    --red: #dc2626;
+    --amber-bg: #fffbea;
+    --amber-line: #f0c040;
+    --row-alt: #f6f7f9;
+    --rule: #ececef;
+    --ask-tint: #f3f7fd;
+    --ask-line: #c9d6ee;
+    --font: -apple-system, "system-ui", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    color-scheme: light;
+  }
+  html, body { height: 100%; }
+  body { margin: 0; font-family: var(--font); font-size: 14px; color: var(--ink-2); background: var(--page-bg); }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  button { font: inherit; cursor: pointer; }
+  a { color: inherit; text-decoration: none; }
+  svg { display: block; }
+  table { border-collapse: collapse; width: 100%; font-size: 12px; font-variant-numeric: tabular-nums; }
+  th { text-align: left; font-weight: 500; color: #374151; padding: 9px 10px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+  td { padding: 9px 10px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  tbody tr:nth-child(even) td { background: var(--row-alt); }
+  tbody tr:last-child td { border-bottom: 0; }
+  th.num, td.num { text-align: right; }
+
+  .app { display: grid; grid-template-columns: var(--side-w) 1fr; grid-template-rows: var(--top-h) 1fr; height: 100%; min-height: 640px; }
+
+  /* ---------- Side nav ---------- */
+  .side { grid-row: 1 / 3; background: var(--navy); color: var(--nav-text); display: flex; flex-direction: column; overflow-y: auto; }
+  .logo { height: 64px; display: flex; align-items: center; justify-content: center; padding: 0 16px; flex: 0 0 auto; }
+  .logo .wordmark { width: 172px; height: auto; }
+  .nav { display: flex; flex-direction: column; padding-bottom: 24px; flex: 1; }
+  .nav-label { padding: 5px 12.5px 3.75px; margin-top: 2px; font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--nav-label); letter-spacing: .02em; }
+  .nav-label:first-child { margin-top: 6px; }
+  .nav-item { display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px 0 15px; color: var(--nav-text); }
+  .nav-item:hover { color: var(--nav-text-active); background: rgba(255,255,255,.04); }
+  .nav-item.active { color: var(--nav-text-active); background: var(--navy-active); box-shadow: inset 3px 0 0 #fff; }
+  .nav-item .ic { width: 16px; height: 16px; flex: 0 0 16px; }
+  .nav-sub { background: var(--navy-sub); display: flex; flex-direction: column; }
+  .nav-sub .nav-item { height: 30px; padding-left: 44px; }
+  .nav-sub .nav-item .ic { display: none; }
+  .nav-item:focus-visible { outline: 2px solid #fff; outline-offset: -2px; }
+  .nav-bottom { margin-top: auto; padding-top: 12px; }
+  .view-proposed .nav-item { font-size: 15px; height: 52px; gap: 13px; }
+  .view-proposed .nav-item .ic { width: 19px; height: 19px; flex-basis: 19px; }
+  .view-proposed .nav-item:first-child { margin-top: 6px; }
+  .nav-item .chev { width: 12px; height: 12px; margin-left: auto; opacity: .6; }
+  .flyout-wrap { position: relative; }
+  .flyout { position: absolute; left: 100%; bottom: 0; min-width: 190px; background: #0b3160; border: 1px solid rgba(255,255,255,.12); border-radius: 8px; box-shadow: 0 10px 28px rgba(0,0,0,.3); padding: 6px; display: none; z-index: 60; }
+  .flyout-wrap:hover .flyout, .flyout-wrap:focus-within .flyout { display: block; }
+  .flyout .nav-item { height: 38px; border-radius: 6px; padding-left: 12px; font-size: 14px; }
+  .flyout .nav-item:hover { background: rgba(255,255,255,.08); }
+  .flyout .nav-item .ic { display: block; }
+  .view-proposed .side { overflow: visible; }
+  .view-current .proposed-only, .view-current .mvp-only, .view-current .aim-only { display: none !important; }
+  .view-proposed .current-only { display: none !important; }
+  .view-mvp .aim-only { display: none !important; }
+  .view-aim .mvp-only { display: none !important; }
+
+  /* ---------- Top bar ---------- */
+  .top { background: var(--bar-bg); border-bottom: 1px solid var(--bar-border); display: flex; align-items: center; padding: 0 8px 0 6px; gap: 6px; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; background: var(--chip-bg); color: var(--chip-text); border: 1px solid transparent; border-radius: 7px; font-weight: 600; font-size: 14px; }
+  .chip.icon { width: 36px; padding: 0; justify-content: center; }
+  .chip .ic { width: 14px; height: 14px; fill: currentColor; }
+  .chip .caret { width: 12px; height: 12px; }
+  .chip.muted { color: var(--chip-muted); }
+  .seg { display: inline-flex; }
+  .seg .chip { border-radius: 0; }
+  .seg .chip:first-child { border-radius: 7px 0 0 7px; }
+  .seg .chip:last-child { border-radius: 0 7px 7px 0; }
+  .seg .chip + .chip { border-left: 1px solid rgba(0,0,0,.06); }
+  .grow { flex: 1; }
+  .chip:focus-visible { outline: 2px solid var(--navy); outline-offset: 1px; }
+
+  /* ---------- Page ---------- */
+  .page { overflow-y: auto; overflow-x: hidden; padding-bottom: 72px; }
+  .ph { background: var(--card-bg); margin: 0 8px; border-radius: 0 0 8px 8px; padding: 14px 18px 20px 14px; }
+  .ph-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+  .title { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 30px; font-weight: 600; color: var(--ink); line-height: 1.1; }
+  .title .ic { width: 26px; height: 26px; fill: currentColor; }
+  .ph-note { font-size: 10px; font-style: italic; color: var(--faint); margin: 2px 0 0 36px; }
+  .btn-navy { display: inline-flex; align-items: center; gap: 8px; height: 31px; padding: 0 12px; background: var(--btn-navy); color: #fff; border: 0; border-radius: 6px; font-size: 13px; font-weight: 500; white-space: nowrap; }
+  .btn-navy .ic { width: 13px; height: 13px; fill: currentColor; }
+  .dates { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 18px; }
+  .field label { display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+  .field label .i { width: 11px; height: 11px; border-radius: 50%; background: #9aa0a8; color: #fff; font-size: 8px; font-weight: 700; display: inline-grid; place-items: center; font-style: normal; }
+  .input { display: flex; align-items: center; justify-content: space-between; height: 32px; padding: 0 10px; border: 1px solid #c9ccd3; border-radius: 4px; background: #fff; font-size: 12px; color: var(--ink); }
+  .input .ic { width: 15px; height: 15px; color: #4b5563; }
+  .field .under { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-top: 6px; }
+  .field .under b { color: var(--ink); font-weight: 600; }
+  .field .under .lnk { color: var(--link); }
+  .field .under .lnk .ic { display: inline-block; width: 9px; height: 9px; vertical-align: -1px; margin-left: 2px; }
+
+  .wrap { margin: 8px 8px 12px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; padding: 14px 14px 16px; display: flex; flex-direction: column; gap: 14px; }
+  .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; padding: 14px; min-width: 0; }
+  .card h3 { margin: 0 0 10px; font-size: 14px; font-weight: 600; color: var(--ink); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .card h3 .sub { font-size: 11px; font-weight: 400; color: var(--muted); display: inline-flex; align-items: center; gap: 4px; }
+  .card h3 .sub .ic { width: 10px; height: 10px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .scroll { overflow-x: auto; }
+
+  /* Hero (Current) */
+  .hero { text-align: center; padding: 16px 0 10px; }
+  .hero .disc { width: 50px; height: 50px; border-radius: 50%; background: var(--navy); margin: 0 auto 26px; display: grid; place-items: center; }
+  .hero .disc svg { width: 26px; height: 26px; }
+  .hero h2 { margin: 0 0 14px; font-size: 30px; font-weight: 600; color: var(--ink); }
+  .hero p { margin: 0 auto; max-width: 420px; font-size: 12.5px; line-height: 1.55; color: #4b5563; }
+
+  /* Stat tiles */
+  .tile .lbl { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  .tile .val { font-size: 19px; font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .tile .delta { font-size: 11px; margin-top: 4px; font-weight: 600; }
+  .tile .delta.down { color: var(--red); }
+  .tile .delta.up { color: #15803d; }
+  .tile .prev { font-size: 10px; color: var(--faint); margin-top: 4px; }
+
+  /* Pies */
+  .legend { display: flex; justify-content: center; gap: 12px; font-size: 11px; color: #374151; flex-wrap: wrap; margin-bottom: 6px; }
+  .legend span { display: inline-flex; align-items: center; gap: 4px; }
+  .legend i { width: 12px; height: 12px; display: inline-block; }
+  .pie { width: 100%; max-width: 260px; margin: 0 auto; }
+  .pie text { font-size: 11px; fill: #fff; font-family: var(--font); }
+
+  /* Pills and tags */
+  .tag { display: inline-block; font-size: 10.5px; padding: 2px 7px; border-radius: 4px; border: 1px solid; white-space: nowrap; }
+  .tag.blue { color: #2563eb; border-color: #93c5fd; background: #eff6ff; }
+  .tag.purple { color: #9333ea; border-color: #d8b4fe; background: #faf5ff; }
+  .tag.red { color: #dc2626; border-color: #fca5a5; background: #fef2f2; }
+  .tag.green { color: #15803d; border-color: #86efac; background: #f0fdf4; }
+  .tag.grey { color: #6b7280; border-color: #d1d5db; background: #f9fafb; }
+  .arrow { color: #6b7280; margin: 0 4px; }
+  .reason small { display: block; margin-top: 4px; }
+  .sel { display: inline-flex; align-items: center; gap: 10px; height: 30px; padding: 0 10px; border: 1px solid #c9ccd3; border-radius: 4px; font-size: 12px; color: var(--ink); background: #fff; font-weight: 400; }
+  .sel .ic { width: 10px; height: 10px; color: #6b7280; }
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .filters button { font-size: 11.5px; padding: 4px 12px; border-radius: 999px; border: 1px solid #e0a65a; background: #fff; color: #374151; }
+  .filters button[aria-pressed="true"] { background: var(--link); border-color: var(--link); color: #fff; }
+  .more { display: block; text-align: right; font-size: 11px; color: var(--muted); margin-top: 6px; }
+  .empty { font-size: 12px; color: var(--faint); }
+  .center { text-align: center; }
+  .pic th { background: #f1f2f4; text-transform: uppercase; font-size: 11px; letter-spacing: .03em; color: #6b7280; border-bottom: 0; }
+  .pic td.diff { color: var(--red); }
+  .pic td.diff.up { color: #15803d; }
+  .total .big { font-size: 28px; font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .total .big small { font-size: 11px; color: var(--muted); font-weight: 400; margin-left: 6px; }
+  .warn { background: var(--amber-bg); border-left: 4px solid var(--amber-line); border-radius: 6px; padding: 14px 16px; display: flex; justify-content: space-between; gap: 12px; }
+  .warn .t { font-size: 13px; font-weight: 600; color: #7a5a00; display: flex; align-items: center; gap: 6px; }
+  .warn .t .ic { width: 13px; height: 13px; }
+  .warn p { margin: 4px 0 0 19px; font-size: 11.5px; color: #4b5563; }
+  .warn .show { font-size: 11px; color: var(--muted); white-space: nowrap; background: none; border: 0; padding: 0; }
+  .warn ul { margin: 8px 0 0 19px; padding: 0 0 0 16px; font-size: 11.5px; color: #4b5563; }
+  .footer { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border: 1px solid var(--card-border); border-radius: 6px; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; height: 29px; padding: 0 12px; border: 0; border-radius: 5px; font-size: 12px; font-weight: 500; color: #fff; }
+  .btn .ic { width: 12px; height: 12px; }
+  .btn.teal { background: var(--teal); }
+  .btn.green { background: var(--green); margin-left: auto; }
+  .btn.ghost { background: transparent; color: #374151; padding: 0 6px; }
+
+  /* ---------- AskMoore card (Proposed only) ---------- */
+  .ask { border: 1px solid var(--ask-line); border-radius: 8px; background: linear-gradient(135deg, var(--ask-tint) 0%, #fff 65%); padding: 16px 20px 14px; }
+  .ask-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .ask-mark { width: 28px; height: 28px; border-radius: 7px; background: var(--navy); display: grid; place-items: center; flex: 0 0 28px; }
+  .ask-mark svg { width: 16px; height: 16px; }
+  .ask-name { font-size: 13px; font-weight: 700; color: var(--navy); letter-spacing: .01em; }
+  .ask-pill { font-size: 10px; margin-right: 6px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 2px 7px; border-radius: 999px; background: #fde68a; color: #78350f; }
+  .ask-head .spacer { flex: 1; }
+  .ask-regen { background: none; border: 0; font-size: 12px; color: var(--link); display: inline-flex; align-items: center; gap: 5px; padding: 4px 6px; border-radius: 4px; }
+  .ask-regen .ic { width: 12px; height: 12px; }
+  .ask-regen:hover { background: rgba(37,99,235,.08); }
+  .ask-regen:disabled { color: var(--faint); cursor: default; }
+  .ask-headline { margin: 0 0 14px; font-size: 17px; font-weight: 600; line-height: 1.45; color: var(--ink); max-width: 72ch; text-wrap: balance; min-height: 1.45em; }
+  .ask-sections { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .ask-sec h4 { margin: 0 0 6px; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .ask-sec p { margin: 0; font-size: 13px; line-height: 1.55; color: var(--ink-2); min-height: 1.55em; }
+  .ask-sec p .nm { color: var(--navy); font-weight: 600; border-bottom: 1px dotted rgba(0,38,84,.4); cursor: pointer; }
+  .ask-foot .scope { display: inline-flex; align-items: center; gap: 5px; }
+  .ask-foot .scope svg { width: 11px; height: 11px; flex: 0 0 11px; }
+  .ask-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(0,38,84,.1); font-size: 11px; color: var(--muted); flex-wrap: wrap; }
+  .ask-fb { display: inline-flex; align-items: center; gap: 4px; }
+  .ask-fb span { margin-right: 4px; }
+  .ask-fb button { width: 26px; height: 26px; border-radius: 6px; border: 1px solid transparent; background: transparent; color: var(--muted); display: grid; place-items: center; }
+  .ask-fb button:hover { background: rgba(0,38,84,.06); color: var(--navy); }
+  .ask-fb button[aria-pressed="true"] { background: var(--navy); color: #fff; }
+  .ask-fb button svg { width: 14px; height: 14px; }
+  .ask-thanks { color: #15803d; font-weight: 600; }
+  .caret-blink::after { content: "▍"; color: var(--navy); animation: blink 1s steps(2) infinite; margin-left: 1px; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .ask.loading .ask-headline, .ask.loading .ask-sec p { color: transparent; }
+  .sk { display: block; height: 12px; border-radius: 4px; background: linear-gradient(90deg, #e4e9f2 25%, #f3f6fb 50%, #e4e9f2 75%); background-size: 200% 100%; animation: shimmer 1.2s linear infinite; margin: 6px 0; }
+  .sk.w60 { width: 60%; } .sk.w80 { width: 80%; } .sk.w90 { width: 90%; } .sk.w40 { width: 40%; }
+  .sk.h16 { height: 16px; }
+  @keyframes shimmer { to { background-position: -200% 0; } }
+  .ask-status { font-size: 12px; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
+  .ask-status .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--navy); animation: pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .25; } }
+  @media (prefers-reduced-motion: reduce) { .sk, .ask-status .dot, .caret-blink::after { animation: none; } }
+
+  /* ---------- Current / Proposed switch ---------- */
+  .switch { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); display: flex; align-items: center; gap: 2px; padding: 3px; background: #1c2230; border-radius: 999px; box-shadow: 0 6px 20px rgba(0,0,0,.28); z-index: 50; }
+  .switch button { border: 0; background: transparent; color: rgba(255,255,255,.7); font-size: 13px; font-weight: 600; padding: 7px 16px; border-radius: 999px; }
+  .switch button[aria-pressed="true"] { background: #fff; color: #1c2230; }
+  .switch .hint { color: rgba(255,255,255,.45); font-size: 11px; padding: 0 10px 0 6px; }
+  .switch button:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
+  .view-tag { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 4px 9px; border-radius: 4px; margin-right: 8px; }
+  .app.view-current .view-tag { background: #e5e7eb; color: #374151; }
+  .app.view-mvp .view-tag { background: #fde68a; color: #78350f; }
+  .app.view-aim .view-tag { background: #ddd6fe; color: #4c1d95; }
+
+  @media (max-width: 1100px) {
+    .grid-4 { grid-template-columns: 1fr 1fr; }
+    .ask-sections { grid-template-columns: 1fr; gap: 12px; }
+  }
+  @media (max-width: 720px) {
+    .app { grid-template-columns: 1fr; grid-template-rows: auto auto 1fr; }
+    .side { grid-row: auto; }
+    .top { flex-wrap: wrap; height: auto; padding: 6px; }
+    .grid-2, .grid-4, .dates { grid-template-columns: 1fr; }
+    .title { font-size: 22px; }
+    .switch .hint { display: none; }
+  }
+</style>
+
+<div class="app view-current" id="app">
+  <div class="switch" role="group" aria-label="Switch between current and proposed views">
+    <button type="button" aria-pressed="true" data-view="current">Current</button>
+    <button type="button" aria-pressed="false" data-view="mvp">Proposed MVP</button>
+    <button type="button" aria-pressed="false" data-view="aim">Proposed Aim</button>
+    <span class="hint">← → to flick</span>
+  </div>
+  <aside class="side" aria-label="Side navigation">
+    <div class="logo"><svg class="wordmark" viewBox="0 0 483.84 78.4" role="img" aria-label="Moorepay" fill="#fff"><path d="M0,20.84c0-3.46.61-6.48,1.84-9.07,1.22-2.59,2.9-4.75,5.02-6.48s4.62-3.04,7.51-3.94c2.87-.9,6-1.35,9.38-1.35,4.46,0,8.46.83,11.99,2.48,3.53,1.66,6.33,4.1,8.42,7.34,2.09-3.24,4.86-5.69,8.31-7.34,3.46-1.65,7.38-2.48,11.77-2.48,3.31,0,6.41.43,9.29,1.3,2.88.86,5.36,2.16,7.45,3.89s3.74,3.89,4.97,6.48c1.22,2.59,1.83,5.61,1.83,9.07v34.98h-12.31v-30.77c0-4.97-1.12-8.51-3.35-10.64-2.23-2.12-5.26-3.18-9.07-3.18s-6.75,1.19-9.23,3.56c-2.48,2.38-3.72,6.23-3.72,11.55v29.48h-12.31v-29.48c0-5.33-1.24-9.18-3.73-11.55-2.48-2.38-5.56-3.56-9.23-3.56s-6.77,1.08-9.07,3.24c-2.3,2.16-3.46,5.72-3.46,10.69v30.67H0V20.84Z"/><path d="M122.55,0c4.17,0,8.08.72,11.72,2.16,3.63,1.44,6.78,3.44,9.45,5.99,2.66,2.56,4.75,5.58,6.26,9.07s2.27,7.29,2.27,11.39-.76,7.79-2.27,11.28c-1.51,3.49-3.6,6.52-6.26,9.07-2.66,2.56-5.81,4.57-9.45,6.05-3.64,1.47-7.54,2.21-11.72,2.21s-8.08-.74-11.72-2.21c-3.64-1.48-6.79-3.49-9.45-6.05-2.66-2.56-4.75-5.58-6.26-9.07-1.51-3.49-2.27-7.25-2.27-11.28s.76-7.9,2.27-11.39c1.51-3.49,3.6-6.51,6.26-9.07,2.66-2.55,5.81-4.55,9.45-5.99,3.64-1.44,7.54-2.16,11.72-2.16M122.55,46.32c2.45,0,4.71-.45,6.8-1.35,2.09-.9,3.87-2.16,5.34-3.78s2.63-3.49,3.46-5.62c.83-2.12,1.24-4.44,1.24-6.96s-.42-4.88-1.24-7.07c-.83-2.2-1.98-4.08-3.46-5.67-1.48-1.58-3.26-2.82-5.34-3.73-2.09-.9-4.36-1.35-6.8-1.35s-4.81.45-6.86,1.35c-2.05.9-3.82,2.14-5.29,3.73-1.48,1.58-2.63,3.47-3.46,5.67s-1.24,4.55-1.24,7.07.41,4.84,1.24,6.96c.83,2.12,1.98,4,3.46,5.62,1.47,1.62,3.24,2.88,5.29,3.78,2.05.9,4.33,1.35,6.86,1.35"/><path d="M184.85,0c4.17,0,8.08.72,11.72,2.16,3.63,1.44,6.78,3.44,9.45,5.99,2.66,2.56,4.75,5.58,6.26,9.07s2.27,7.29,2.27,11.39-.76,7.79-2.27,11.28c-1.51,3.49-3.6,6.52-6.26,9.07-2.66,2.56-5.81,4.57-9.45,6.05-3.64,1.47-7.54,2.21-11.72,2.21s-8.08-.74-11.72-2.21c-3.63-1.48-6.79-3.49-9.45-6.05-2.66-2.56-4.75-5.58-6.26-9.07-1.51-3.49-2.27-7.25-2.27-11.28s.76-7.9,2.27-11.39c1.51-3.49,3.6-6.51,6.26-9.07,2.66-2.55,5.81-4.55,9.45-5.99,3.64-1.44,7.55-2.16,11.72-2.16M184.85,46.32c2.45,0,4.71-.45,6.8-1.35,2.09-.9,3.87-2.16,5.34-3.78s2.63-3.49,3.46-5.62c.83-2.12,1.24-4.44,1.24-6.96s-.41-4.88-1.24-7.07c-.83-2.2-1.98-4.08-3.46-5.67-1.48-1.58-3.26-2.82-5.34-3.73-2.09-.9-4.36-1.35-6.8-1.35s-4.81.45-6.86,1.35c-2.05.9-3.82,2.14-5.29,3.73-1.48,1.58-2.63,3.47-3.46,5.67s-1.24,4.55-1.24,7.07.41,4.84,1.24,6.96,1.98,4,3.46,5.62c1.47,1.62,3.24,2.88,5.29,3.78,2.05.9,4.33,1.35,6.86,1.35"/><path d="M219.62,20.84c0-6.62,2.03-11.75,6.1-15.39,4.07-3.63,9.7-5.45,16.9-5.45,4.54,0,8.22.63,11.07,1.89,2.84,1.26,4.27,3.19,4.27,5.78,0,1.23-.34,2.41-1.03,3.56-.68,1.15-1.24,1.87-1.67,2.16-1.22-.57-2.73-1.11-4.54-1.62-1.8-.5-3.85-.76-6.16-.76-8.42,0-12.63,4.46-12.63,13.39v31.31h-12.31V20.84h0Z"/><path d="M307.51,51.72c-.58.36-1.48.86-2.7,1.51-1.23.65-2.75,1.26-4.59,1.84s-3.96,1.08-6.37,1.51c-2.41.43-5.06.65-7.94.65-4.03,0-7.79-.61-11.28-1.84-3.49-1.22-6.55-3.04-9.18-5.45s-4.7-5.36-6.21-8.86c-1.51-3.49-2.27-7.5-2.27-12.04s.73-8.26,2.21-11.82c1.47-3.56,3.53-6.62,6.15-9.18,2.63-2.55,5.72-4.53,9.29-5.94,3.58-1.4,7.48-2.1,11.73-2.1,3.74,0,7.05.49,9.93,1.46s5.31,2.27,7.29,3.89c1.98,1.62,3.47,3.51,4.48,5.67s1.51,4.46,1.51,6.91-.47,4.81-1.4,6.86c-.94,2.05-2.59,3.82-4.97,5.29-2.38,1.48-5.58,2.63-9.61,3.46-4.03.83-9.14,1.24-15.33,1.24-1.44,0-2.79-.02-4.05-.05-1.26-.04-2.61-.09-4.05-.16.58,3.67,2.36,6.64,5.35,8.91,2.99,2.27,7.25,3.4,12.79,3.4,1.87,0,3.6-.14,5.18-.43s3.01-.65,4.26-1.08c1.26-.43,2.34-.86,3.24-1.3.9-.43,1.57-.76,2-.97l4.53,8.64v-.02ZM269.61,26.13c1.65.07,3.24.11,4.75.11h4.54c3.96,0,7.16-.25,9.61-.76,2.45-.5,4.35-1.15,5.72-1.94,1.36-.79,2.27-1.69,2.7-2.7.43-1.01.65-2.05.65-3.13,0-2.73-1.1-4.79-3.3-6.15-2.19-1.37-4.91-2.05-8.15-2.05-2.66,0-5.01.47-7.02,1.4-2.01.94-3.71,2.18-5.08,3.73-1.37,1.55-2.43,3.33-3.18,5.35-.76,2.02-1.17,4.07-1.24,6.15"/><path d="M312.15,31.1c0-5.04.72-9.48,2.16-13.34,1.44-3.85,3.46-7.09,6.05-9.72s5.72-4.62,9.4-5.99C333.43.68,337.49,0,341.96,0,346.06,0,349.84.72,353.3,2.16s6.46,3.42,9.02,5.94c2.55,2.52,4.55,5.54,5.99,9.07,1.44,3.53,2.16,7.34,2.16,11.45s-.7,8.01-2.1,11.5-3.35,6.5-5.83,9.01c-2.48,2.52-5.4,4.48-8.75,5.89-3.35,1.4-7,2.1-10.96,2.1s-7.74-.79-10.91-2.38c-3.17-1.58-5.65-3.53-7.45-5.83v28.4h-12.31V31.1h0ZM341.09,46.21c2.45,0,4.69-.45,6.75-1.35,2.05-.9,3.81-2.14,5.29-3.73,1.48-1.58,2.61-3.46,3.4-5.61.79-2.16,1.19-4.5,1.19-7.02s-.4-4.73-1.19-6.86c-.79-2.12-1.92-3.96-3.4-5.51-1.47-1.55-3.24-2.77-5.29-3.67-2.05-.9-4.3-1.35-6.75-1.35s-4.7.43-6.75,1.29-3.82,2.05-5.29,3.56c-1.48,1.51-2.63,3.33-3.46,5.45-.83,2.12-1.24,4.48-1.24,7.07s.41,4.86,1.24,7.02,1.96,4.03,3.4,5.61,3.18,2.83,5.24,3.73c2.05.9,4.33,1.35,6.86,1.35"/><path d="M425.21,55.5c-.72.15-1.86.3-3.4.49-1.55.18-3.36.36-5.45.54-2.09.18-4.43.34-7.02.49-2.59.14-5.29.22-8.1.22-5.62,0-10.21-.48-13.77-1.46-3.56-.97-6.37-2.27-8.42-3.89-2.05-1.62-3.45-3.49-4.21-5.61-.76-2.12-1.13-4.3-1.13-6.53,0-2.95.45-5.54,1.35-7.77s2.37-4.1,4.43-5.62c2.05-1.51,4.73-2.64,8.04-3.4s7.34-1.13,12.1-1.13c2.73,0,5.33.09,7.77.27,2.45.18,4.28.34,5.51.49,0-2.52-.41-4.61-1.24-6.26s-1.96-2.95-3.4-3.89c-1.45-.93-3.17-1.58-5.18-1.94-2.02-.36-4.25-.54-6.69-.54-4.1,0-7.4.47-9.88,1.4-2.48.94-4.12,1.73-4.91,2.38-.43-.36-1.03-1.04-1.78-2.05-.76-1.01-1.13-2.23-1.13-3.67,0-1.01.27-2,.81-2.97s1.49-1.84,2.86-2.59c1.36-.76,3.2-1.35,5.51-1.78,2.27-.46,5.18-.68,8.71-.68,4.25,0,8.11.42,11.61,1.24,3.49.83,6.49,2.14,9.02,3.94,2.52,1.8,4.48,4.18,5.88,7.13,1.41,2.95,2.11,6.52,2.11,10.69v32.5h0ZM413,31.53c-.72-.14-2.07-.36-4.05-.65-1.98-.29-4.95-.43-8.91-.43-4.9,0-8.46.74-10.69,2.21-2.23,1.48-3.35,3.8-3.35,6.96,0,1.3.23,2.48.7,3.56s1.28,2,2.43,2.75c1.15.76,2.72,1.33,4.7,1.73,1.98.4,4.45.59,7.4.59,3.31,0,5.94-.12,7.88-.38,1.95-.25,3.24-.45,3.89-.59v-15.77.02Z"/><path d="M431.14,7.24c0-1.94.57-3.38,1.73-4.32,1.15-.94,2.73-1.4,4.75-1.4,1.3,0,2.5.16,3.62.49,1.11.32,1.85.56,2.21.7v28.83c0,4.25,1.13,7.63,3.4,10.15s5.78,3.78,10.53,3.78c4.39,0,7.84-1.28,10.37-3.83,2.52-2.55,3.78-6.32,3.78-11.28V7.24c0-1.94.57-3.38,1.73-4.32,1.15-.94,2.73-1.4,4.75-1.4,1.3,0,2.5.16,3.62.49,1.11.32,1.85.56,2.21.7v47.29c0,5.11-.68,9.45-2.05,13.01-1.37,3.56-3.31,6.49-5.83,8.8-2.52,2.3-5.55,3.98-9.07,5.02-3.53,1.04-7.45,1.57-11.77,1.57-2.95,0-5.65-.16-8.1-.49-2.45-.32-4.62-.7-6.53-1.13s-3.47-.85-4.7-1.24c-1.22-.4-2.09-.7-2.59-.92.58-1.51,1.11-3.04,1.62-4.59.5-1.55,1.01-3.08,1.51-4.59.51.22,1.3.5,2.38.86,1.08.36,2.38.7,3.89,1.03,1.51.32,3.22.59,5.13.81s3.94.32,6.1.32c2.81,0,5.33-.31,7.56-.92s4.12-1.67,5.67-3.19c1.55-1.51,2.73-3.51,3.56-5.99s1.24-5.6,1.24-9.34c-1.44,2.09-3.69,3.76-6.75,5.02-3.06,1.26-6.42,1.89-10.09,1.89-3.46,0-6.66-.49-9.61-1.46-2.95-.97-5.47-2.38-7.56-4.21-2.09-1.84-3.73-4.12-4.91-6.86-1.18-2.73-1.78-5.87-1.78-9.39V7.24h-.02Z"/></svg></div>
+    <nav class="nav" id="sidenav"></nav>
+  </aside>
+
+  <header class="top" aria-label="Top navigation">
+    <button class="chip icon" title="Collapse menu"><svg class="ic" viewBox="0 0 16 16"><path d="M1 2h14v12H1zm1 1v10h4V3zm5 0v10h7V3zM4.5 5.2 2.9 8l1.6 2.8V5.2z"/></svg></button>
+    <div class="seg">
+      <span class="chip"><svg class="ic" viewBox="0 0 16 16"><path d="M5 1h6v2h2v12H3V3h2zm1 1v1h4V2zM5 6v1h6V6zm0 3v1h6V9zm0 3v1h4v-1z"/></svg>Admin</span>
+      <span class="chip"><svg class="ic" viewBox="0 0 16 16"><path d="M8 1a4 4 0 0 1 4 4v1h2v9H2V6h2V5a4 4 0 0 1 4-4zm0 2a2 2 0 0 0-2 2v1h4V5a2 2 0 0 0-2-2z"/></svg>Hartley &amp; Rowe Ltd</span>
+      <span class="chip icon"><svg class="caret" viewBox="0 0 12 12"><path fill="none" stroke="currentColor" stroke-width="1.6" d="M2 4l4 4 4-4"/></svg></span>
+      <span class="chip muted"><svg class="ic" viewBox="0 0 16 16"><path d="M2 15V2h7v4h5v9zM4 4v2h1V4zm0 3v2h1V7zm0 3v2h1v-2zm3-6v2h1V4zm0 3v2h1V7zm0 3v2h1v-2zm4-2v2h1V8zm0 3v2h1v-2z"/></svg>Monthly Payroll</span>
+      <span class="chip icon"><svg class="caret" viewBox="0 0 12 12"><path fill="none" stroke="currentColor" stroke-width="1.6" d="M2 4l4 4 4-4"/></svg></span>
+    </div>
+    <div class="grow"></div>
+    <span class="view-tag" id="viewTag">Current</span>
+    <button class="chip icon proposed-only" title="Notes"><svg class="ic" viewBox="0 0 16 16"><path d="M3 1h10a1 1 0 0 1 1 1v9.5L10.5 15H3a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zm1 2v10h5.5v-3H13V3zm1 2h6v1H5zm0 2.5h6v1H5zM5 10h3v1H5z"/></svg></button>
+    <button class="chip icon" title="Notifications"><svg class="ic" viewBox="0 0 16 16"><path d="M8 1a1 1 0 0 1 1 1v.3A4.5 4.5 0 0 1 12.5 7v3l1.5 2v1H2v-1l1.5-2V7A4.5 4.5 0 0 1 7 2.3V2a1 1 0 0 1 1-1zm-2 13h4a2 2 0 0 1-4 0z"/></svg></button>
+    <button class="chip icon proposed-only" title="Settings"><svg class="ic" viewBox="0 0 16 16"><path d="M6.5 1h3l.4 1.8 1.6.9 1.7-.6 1.5 2.6-1.3 1.2v1.8l1.3 1.2-1.5 2.6-1.7-.6-1.6.9L9.5 15h-3l-.4-1.8-1.6-.9-1.7.6L1.3 10.3l1.3-1.2V7.3L1.3 6.1l1.5-2.6 1.7.6 1.6-.9zM8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z"/></svg></button>
+    <button class="chip current-only"><svg class="ic" viewBox="0 0 16 16"><path d="M8 1a7 7 0 1 1 0 14A7 7 0 0 1 8 1zm0 2.5A2.5 2.5 0 1 0 8 8.5 2.5 2.5 0 0 0 8 3.5zM8 13a5 5 0 0 0 3.7-1.6C10.9 10.4 9.5 9.8 8 9.8s-2.9.6-3.7 1.6A5 5 0 0 0 8 13z"/></svg>Namaste, Alex!<svg class="caret" viewBox="0 0 12 12"><path fill="none" stroke="currentColor" stroke-width="1.6" d="M2 4l4 4 4-4"/></svg></button>
+    <button class="chip icon proposed-only" title="Account"><svg class="ic" viewBox="0 0 16 16"><path d="M8 1a7 7 0 1 1 0 14A7 7 0 0 1 8 1zm0 2.5A2.5 2.5 0 1 0 8 8.5 2.5 2.5 0 0 0 8 3.5zM8 13a5 5 0 0 0 3.7-1.6C10.9 10.4 9.5 9.8 8 9.8s-2.9.6-3.7 1.6A5 5 0 0 0 8 13z"/></svg></button>
+    <button class="chip icon current-only" title="Menu"><svg class="ic" viewBox="0 0 16 16"><path d="M1 3h14v2H1zm0 4h14v2H1zm0 4h14v2H1z"/></svg></button>
+  </header>
+
+  <main class="page" id="page">
+    <div class="demo-banner proposed-only" role="note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>Roadmap Preview - subject to change</div>
+    <!-- Page header card -->
+    <div class="ph">
+      <div class="ph-row">
+        <div>
+          <h1 class="title"><svg class="ic" viewBox="0 0 24 24" fill="currentColor"><path d="M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm1 3v4h10V5zm0 6v2h2v-2zm4 0v2h2v-2zm4 0v2h2v-2zm-8 4v2h2v-2zm4 0v2h2v-2zm4 0v2h2v-2z"/></svg>Run Payroll - 10th Monthly of 2026</h1>
+          <div class="ph-note">HMRC notifications have never been fetched</div>
+        </div>
+        <button class="btn-navy"><svg class="ic" viewBox="0 0 16 16"><path d="M4 1h6l3 3v11H4zm1 1v12h7V5H9V2zm1 5h5v1H6zm0 2h5v1H6zm0 2h3v1H6zM1 4h2v1H1zm0 3h2v1H1zm0 3h2v1H1z"/></svg>Audit Logs</button>
+      </div>
+      <div class="dates">
+        <div class="field"><label>Payday <i class="i">i</i></label><div class="input"><span>29th January 2027</span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></div><div class="under"><span><b>Contractual Payday:</b> 31st January 2027</span></div></div>
+        <div class="field"><label>Period Start <i class="i">i</i></label><div class="input"><span>1st January 2027</span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></div><div class="under"><span class="lnk">Looking for an older payroll?<svg class="ic" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M5 2H2v8h8V7M7 2h3v3M10 2 5 7"/></svg></span></div></div>
+        <div class="field"><label>Period End <i class="i">i</i></label><div class="input"><span>31st January 2027</span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></div><div class="under"><span></span><span>More Options <svg class="ic" style="display:inline-block;width:9px;height:9px;vertical-align:-1px" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 4l4 4 4-4"/></svg></span></div></div>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <!-- CURRENT: the hero as it is in the product today -->
+      <section class="hero current-only">
+        <div class="disc"><svg viewBox="0 0 24 24" fill="#fff"><path d="M11 2.05V13h10.95A10 10 0 1 1 11 2.05z"/><path d="M13 2.05A10 10 0 0 1 21.95 11H13z"/></svg></div>
+        <h2>Almost done!</h2>
+        <p>Congratulations on getting all the numbers in place! We know it's no easy feat. You can save the payroll and come back to it later, or conclude it right now.</p>
+      </section>
+
+      <!-- PROPOSED MVP: AskMoore from run totals only. PROPOSED AIM: AskMoore with payslip-level detail. Both rendered from the template in the script. -->
+      <div id="askCards"></div>
+
+      <div class="grid-4" id="tiles"></div>
+
+      <div class="grid-2">
+        <div class="card"><h3>Department Breakdown</h3><div class="legend" id="legDept"></div><svg class="pie" id="pieDept" viewBox="0 0 200 160"></svg></div>
+        <div class="card"><h3>Net &amp; Deductions Breakdown</h3><div class="legend" id="legNet"></div><svg class="pie" id="pieNet" viewBox="0 0 200 160"></svg></div>
+      </div>
+
+      <div class="card"><h3>Deductions &amp; Employer Liabilities</h3><div class="scroll"><table><thead><tr><th>Category</th><th>Employee (£)</th><th>Employer (£)</th></tr></thead><tbody id="tbDed"></tbody></table></div></div>
+
+      <div class="grid-2">
+        <div class="card"><h3><span id="hStarters">New Starters</span><span class="sub"><svg class="ic" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 8l4-4 4 4"/></svg>Hide</span></h3><div id="starters"></div></div>
+        <div class="card"><h3>Leavers (0)<span class="sub"><svg class="ic" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 8l4-4 4 4"/></svg>Hide</span></h3><div class="empty">No leavers this period.</div></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card"><h3>Top Earners</h3><div class="scroll"><table><thead><tr><th>Name</th><th>Dept</th><th>Gross (£)</th><th>Net (£)</th></tr></thead><tbody id="tbTop"></tbody></table></div></div>
+        <div class="card"><h3>Bottom Earners</h3><div class="scroll"><table><thead><tr><th>Name</th><th>Dept</th><th>Gross (£)</th><th>Net (£)</th></tr></thead><tbody id="tbBottom"></tbody></table></div></div>
+      </div>
+
+      <div class="card"><h3><span id="hMovers">Biggest Month-on-Month Movers</span><span class="sel">Show 5 <svg class="ic" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 4l4 4 4-4"/></svg></span></h3>
+        <div class="scroll"><table><thead><tr><th>Employee</th><th>This Net (£)</th><th>Last Net (£)</th><th>Δ (£)</th><th>Δ (%)</th><th>Reason</th></tr></thead><tbody id="tbMovers"></tbody></table></div></div>
+
+      <div class="card"><h3><span id="hCodes">Code &amp; Category Changes</span><span style="display:inline-flex;gap:10px;align-items:center"><span class="sel">Show 5 <svg class="ic" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 4l4 4 4-4"/></svg></span><span class="sub">Show More</span></span></h3>
+        <div class="scroll"><table><thead><tr><th>Employee</th><th>Type</th><th>Period</th><th>Change</th><th>Source</th></tr></thead><tbody id="tbCodes"></tbody></table></div></div>
+
+      <div class="card"><h3><span id="hAe">Auto Enrolment this payroll</span><button class="btn-navy" style="height:26px;font-size:11px"><svg class="ic" viewBox="0 0 16 16"><path d="M3 2h8v2h2v10H5v-2H3zm1 1v8h6V3zm2 2h3v1H6zm0 2h3v1H6z"/></svg>View all assessments</button></h3><div id="ae"></div></div>
+
+      <div class="card"><h3 id="hExc">Exceptions</h3><div class="filters" id="excFilters"></div>
+        <div class="scroll"><table><thead><tr><th>Employee</th><th>Exception</th><th>Details</th></tr></thead><tbody id="tbExc"></tbody></table></div><span class="more">⌄ Expand full view</span></div>
+
+      <div class="card"><h3>Department Summary</h3><div class="scroll"><table><thead><tr><th>Department</th><th>Gross (£)</th><th>Net (£)</th><th>Cost (£)</th></tr></thead><tbody id="tbDept"></tbody></table></div></div>
+
+      <div class="card pic"><h3 class="center" style="justify-content:center">Pay Item Comparison</h3><div class="scroll"><table><thead><tr><th>Pay Item ⌃</th><th class="num">Current Period ⌃</th><th class="num">Previous Period ⌃</th><th class="num">Difference ⌃</th><th class="num">Change (%) ⌃</th></tr></thead><tbody id="tbPic"></tbody></table></div></div>
+
+      <div class="card total"><h3 class="center" style="justify-content:center">Total Payroll Cost</h3><div class="big" id="totalCost"></div></div>
+
+      <div class="warn" id="warn">
+        <div><div class="t"><svg class="ic" viewBox="0 0 24 24" fill="#b45309"><path d="M12 2 1 21h22zm-1 7h2v6h-2zm0 7h2v2h-2z"/></svg><span id="warnTitle"></span></div><p id="warnText"></p><ul id="warnList" hidden></ul></div>
+        <button class="show" id="warnToggle" type="button">⌄ Show List</button>
+      </div>
+
+      <div class="footer">
+        <button class="btn ghost"><svg class="ic" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 2 4 6l4 4"/></svg>Go Back</button>
+        <button class="btn teal"><svg class="ic" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h9l3 3v9H2zm2 2v3h6V4zm1 6v3h6v-3z"/></svg>Save &amp; Exit</button>
+        <button class="btn teal"><svg class="ic" viewBox="0 0 16 16" fill="currentColor"><path d="M4 1h6l3 3v11H4zm1 1v12h7V5H9V2zm1 6h5v1H6zm0 2h5v1H6z"/></svg>Generate Preview</button>
+        <button class="btn green"><svg class="ic" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 1 1 0 14A7 7 0 0 1 8 1zm3.2 4.6L7 9.8 4.8 7.6 3.7 8.7 7 12l5.3-5.3z"/></svg>Conclude Payroll</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  // ================================================================
+  // NAV - Current (frozen, standard customer view plus the Monthly / Weekly sub-menu) and Proposed
+  // ================================================================
+  const NAV_CURRENT = [
+    { section: "Management", items: [
+      { label: "People", icon: "people" },
+      { label: "Pensions", icon: "pension" },
+      { label: "Run Payroll", icon: "payroll", active: true, children: [ { label: "Monthly", active: true }, { label: "Weekly" } ] },
+      { label: "Payroll History", icon: "history" },
+      { label: "Tax Forms", icon: "tax" },
+      { label: "Reports", icon: "reports" },
+    ]},
+    { section: "Approvals", items: [ { label: "Leave Management", icon: "leave" } ]},
+    { section: "Admin", items: [ { label: "Settings", icon: "settings" } ]},
+    { section: "Learn", items: [
+      { label: "Support", icon: "support" },
+      { label: "User Guide", icon: "guide" },
+      { label: "My Tickets", icon: "tickets" },
+    ]},
+  ];
+  const NAV_PROPOSED = [
+    { section: null, items: [
+      { label: "Home", icon: "home" },
+      { label: "People", icon: "people" },
+      { label: "Payroll", icon: "payroll", active: true },
+      { label: "Reports", icon: "reports" },
+      { label: "PAYE", icon: "crown" },
+      { label: "Pensions", icon: "pension" },
+      { label: "Timesheets", icon: "timesheets" },
+      { label: "Leave", icon: "leave" },
+      { label: "Help", icon: "support", bottom: true, flyout: [
+        { label: "Support", icon: "support" },
+        { label: "User Guide", icon: "guide" },
+        { label: "My Tickets", icon: "tickets" },
+      ]},
+    ]},
+  ];
+  
+  const ICONS = {
+    "crown": "<svg class=\"ic\" aria-hidden=\"true\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M3.75 8.25 7.5 12l4.5-6 4.5 6 3.75-3.75L18.75 18H5.25L3.75 8.25Z\"/><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M5.25 21h13.5\"/><circle cx=\"3.75\" cy=\"7.5\" r=\".75\" fill=\"currentColor\"/><circle cx=\"12\" cy=\"5.25\" r=\".75\" fill=\"currentColor\"/><circle cx=\"20.25\" cy=\"7.5\" r=\".75\" fill=\"currentColor\"/></svg>",
+    "home": "<svg class=\"ic\" aria-hidden=\"true\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25\"/></svg>",
+    "people": "<svg class=\"ic\" aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><path fill-rule=\"evenodd\" d=\"M8.25 6.75a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0ZM15.75 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM2.25 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM6.31 15.117A6.745 6.745 0 0 1 12 12a6.745 6.745 0 0 1 6.709 7.498.75.75 0 0 1-.372.568A12.696 12.696 0 0 1 12 21.75c-2.305 0-4.47-.612-6.337-1.684a.75.75 0 0 1-.372-.568 6.787 6.787 0 0 1 1.019-4.38Z\" clip-rule=\"evenodd\"></path><path d=\"M5.082 14.254a8.287 8.287 0 0 0-1.308 5.135 9.687 9.687 0 0 1-1.764-.44l-.115-.04a.563.563 0 0 1-.373-.487l-.01-.121a3.75 3.75 0 0 1 3.57-4.047ZM20.226 19.389a8.287 8.287 0 0 0-1.308-5.135 3.75 3.75 0 0 1 3.57 4.047l-.01.121a.563.563 0 0 1-.373.486l-.115.04c-.567.2-1.156.349-1.764.441Z\"></path></svg>",
+    "pension": "<svg class=\"ic\" aria-hidden=\"true\" viewBox=\"0 0 512 512\" fill=\"currentColor\"><g><path d=\"m288.134 208.864h-64.267c-8.284 0-15 6.716-15 15s6.716 15 15 15h64.267c8.284 0 15-6.716 15-15s-6.716-15-15-15z\"></path><path d=\"m497 256.641h-31.512c-10.983-23.219-28.02-44.363-49.889-61.89v-67.71c0-8.284-6.716-15-15-15-29.757 0-57.731 11.588-78.771 32.628-1.58 1.58-3.115 3.21-4.6 4.886-17.306-3.573-35.154-5.381-53.196-5.381-109.979 0-205.554 68.204-215.051 160.667h-1.865c-9.438 0-17.117-7.679-17.117-17.117v-.016c0-8.284-6.716-14.992-15-14.992s-14.999 6.724-14.999 15.008c0 25.98 21.137 47.117 47.117 47.117h1.862c4.02 39.201 23.755 75.611 56.775 104.479l-8.843 33.003c-2.144 8.002 2.612 16.23 10.606 18.371l77.597 20.792c8.02 2.147 16.234-2.629 18.372-10.607l5.743-21.438h109.609l5.743 21.438c3.135 11.694 14.789 11.568 18.371 10.607l77.597-20.792c8.003-2.144 12.749-10.376 10.607-18.371l-8.846-33.011c18.632-16.34 33.341-35.52 43.16-56.271h31.53c8.284 0 15-6.716 15-15v-96.4c0-8.284-6.716-15-15-15zm-15 96.4h-26.376c-6.17 0-11.71 3.777-13.964 9.521-8.749 22.296-24.527 42.909-45.629 59.609-4.693 3.714-6.729 9.863-5.181 15.645l7.445 27.783-48.619 13.027-4.84-18.066c-1.758-6.558-7.7-11.118-14.489-11.118h-132.628c-6.789 0-12.732 4.56-14.489 11.118l-4.84 18.066-48.619-13.027 7.445-27.783c1.549-5.78-.486-11.928-5.178-15.643-34.718-27.487-53.838-63.829-53.838-102.332 0-80.321 83.364-145.667 185.833-145.667 18.899 0 37.535 2.23 55.388 6.63 5.893 1.453 12.077-.789 15.672-5.676 2.395-3.255 5.068-6.365 7.948-9.245 11.777-11.778 26.526-19.502 42.559-22.472v58.712c0 4.75 2.25 9.22 6.065 12.049 23.346 17.31 40.641 39.078 50.016 62.951 2.255 5.741 7.794 9.517 13.962 9.517h26.357z\"></path><path d=\"m368.467 240.997c-8.284 0-15 6.716-15 15v16.067c0 8.284 6.716 15 15 15s15-6.716 15-15v-16.067c0-8.284-6.716-15-15-15z\"></path><path d=\"m256 110.334c30.419 0 55.167-24.748 55.167-55.167s-24.748-55.167-55.167-55.167-55.167 24.748-55.167 55.167 24.748 55.167 55.167 55.167zm0-80.334c13.877 0 25.167 11.29 25.167 25.167s-11.29 25.167-25.167 25.167-25.167-11.29-25.167-25.167 11.29-25.167 25.167-25.167z\"></path></g></svg>",
+    "payroll": "<svg class=\"ic\" aria-hidden=\"true\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M14.121 7.629A3 3 0 0 0 9.017 9.43c-.023.212-.002.425.028.636l.506 3.541a4.5 4.5 0 0 1-.43 2.65L9 16.5l1.539-.513a2.25 2.25 0 0 1 1.422 0l.655.218a2.25 2.25 0 0 0 1.718-.122L15 15.75M8.25 12H12m9 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z\"></path></svg>",
+    "history": "<svg class=\"ic\" aria-hidden=\"true\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z\"></path></svg>",
+    "tax": "<svg class=\"ic\" aria-hidden=\"true\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10\"></path></svg>",
+    "reports": "<svg class=\"ic\" aria-hidden=\"true\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z\"></path></svg>",
+    "timesheets": "<svg class=\"ic\" aria-hidden=\"true\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z\"></path></svg>",
+    "leave": "<svg class=\"ic\" aria-hidden=\"true\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5\"></path></svg>",
+    "settings": "<svg class=\"ic\" aria-hidden=\"true\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 0 1 1.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.559.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.894.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 0 1-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.398.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 0 1-.12-1.45l.527-.737c.25-.35.272-.806.108-1.204-.165-.397-.506-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 0 1 .12-1.45l.773-.773a1.125 1.125 0 0 1 1.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894Z\"></path><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z\"></path></svg>",
+    "support": "<svg class=\"ic\" aria-hidden=\"true\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M16.712 4.33a9.027 9.027 0 0 1 1.652 1.306c.51.51.944 1.064 1.306 1.652M16.712 4.33l-3.448 4.138m3.448-4.138a9.014 9.014 0 0 0-9.424 0M19.67 7.288l-4.138 3.448m4.138-3.448a9.014 9.014 0 0 1 0 9.424m-4.138-5.976a3.736 3.736 0 0 0-.88-1.388 3.737 3.737 0 0 0-1.388-.88m2.268 2.268a3.765 3.765 0 0 1 0 2.528m-2.268-4.796a3.765 3.765 0 0 0-2.528 0m4.796 4.796c-.181.506-.475.982-.88 1.388a3.736 3.736 0 0 1-1.388.88m2.268-2.268 4.138 3.448m0 0a9.027 9.027 0 0 1-1.306 1.652c-.51.51-1.064.944-1.652 1.306m0 0-3.448-4.138m3.448 4.138a9.014 9.014 0 0 1-9.424 0m5.976-4.138a3.765 3.765 0 0 1-2.528 0m0 0a3.736 3.736 0 0 1-1.388-.88 3.737 3.737 0 0 1-.88-1.388m2.268 2.268L7.288 19.67m0 0a9.024 9.024 0 0 1-1.652-1.306 9.027 9.027 0 0 1-1.306-1.652m0 0 4.138-3.448M4.33 16.712a9.014 9.014 0 0 1 0-9.424m4.138 5.976a3.765 3.765 0 0 1 0-2.528m0 0c.181-.506.475-.982.88-1.388a3.736 3.736 0 0 1 1.388-.88m-2.268 2.268L4.33 7.288m6.406 1.18L7.288 4.33m0 0a9.024 9.024 0 0 0-1.652 1.306A9.025 9.025 0 0 0 4.33 7.288\"></path></svg>",
+    "guide": "<svg class=\"ic\" aria-hidden=\"true\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25\"></path></svg>",
+    "tickets": "<svg class=\"ic\" aria-hidden=\"true\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z\"></path></svg>"
+  };
+  function icon(name) { return ICONS[name] || ''; }
+  function renderItem(item) {
+    const link = '<a class="nav-item' + (item.active ? ' active' : '') + '" href="#">' + icon(item.icon) + '<span>' + item.label + '</span>'
+      + (item.flyout ? '<svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.6" d="M4 2l4 4-4 4"/></svg>' : '') + '</a>';
+    let html = link;
+    if (item.children) html += '<div class="nav-sub">' + item.children.map(renderItem).join('') + '</div>';
+    if (item.flyout) html = '<div class="flyout-wrap">' + link + '<div class="flyout" role="menu">' + item.flyout.map(renderItem).join('') + '</div></div>';
+    if (item.bottom) html = '<div class="nav-bottom">' + html + '</div>';
+    return html;
+  }
+  function renderNav(nav) {
+    document.getElementById('sidenav').innerHTML = nav.map(s => (s.section ? '<div class="nav-label">' + s.section + '</div>' : '') + s.items.map(renderItem).join('')).join('');
+  }
+
+  // ================================================================
+  // FICTIONAL PAY RUN DATA - Hartley & Rowe Ltd, Month 10 (January 2027)
+  // Every figure on the page and in the AskMoore summary is computed from this.
+  // ================================================================
+  const RUN = { label: 'Month 10', prevLabel: "December's run", period: 'P10', prevPeriod: 'P9' };
+  const EMP = [
+    { name: 'Amelia Clarke',   dept: 'Operations', gross: 2300, code: '1257L', ni: 'A', pension: true, prev: { gross: 2300, code: '1257L', ni: 'A', pension: true } },
+    { name: 'Daniel Okafor',   dept: 'Sales',      gross: 2300, extras: { 'Bonus': 500 }, code: '1257L', ni: 'A', pension: true, prev: { gross: 2300, code: '1257L', ni: 'A', pension: true } },
+    { name: 'Priya Nair',      dept: 'Finance',    gross: 2000, code: '0T',    ni: 'A', pension: true, prev: { gross: 2000, code: '1257L', ni: 'A', pension: true },
+      change: { type: 'Tax Code', period: 'P9 → P10', from: '1257L', to: '0T', source: 'Manual' } },
+    { name: 'Tom Whitfield',   dept: 'Warehouse',  gross: 2000, extras: { 'Overtime': 240 }, code: '0T',    ni: 'A', pension: true, prev: { gross: 2000, extras: { 'Overtime': 60 }, code: '1257L', ni: 'A', pension: true },
+      change: { type: 'Tax Code', period: 'P9 → P10', from: '1257L', to: '0T', source: 'Manual' } },
+    { name: 'Sophie Marsh',    dept: 'Operations', gross: 2000, extras: { 'Holiday Pay': 200 }, code: '1257L', ni: 'A', pension: true, prev: { gross: 2000, extras: { 'Holiday Pay': 200 }, code: '1257L', ni: 'A', pension: true } },
+    { name: 'Jacob Reid',      dept: 'Warehouse',  gross: 1800, extras: { 'Overtime': 360 }, code: '1257L', ni: 'A', pension: true, prev: { gross: 1800, extras: { 'Overtime': 120 }, code: '1257L', ni: 'A', pension: true } },
+    { name: 'Kavya Raman',     dept: 'Sales',      gross: 1200, code: '1257L', ni: 'A', pension: true, prev: { gross: 1200, code: '1257L', ni: 'A', pension: true } },
+    { name: 'Margaret Hughes', dept: 'Finance',    gross: 800,  code: '1257L', ni: 'C', pension: false, prev: { gross: 800, code: '1257L', ni: 'A', pension: false },
+      change: { type: 'NI Letter', period: 'P10', from: 'A', to: 'C', source: 'Manual' } },
+    { name: 'Leo Fitzgerald',  dept: 'Sales',      gross: 1500, code: '1257L', ni: 'A', pension: false, prev: null, starter: true, startDate: '12th January 2027',
+      change: { type: 'Tax Code', period: 'P10', from: '—', to: '1257L', source: 'Starter checklist' }, ae: 'Postponed until 1st April 2027', notReady: true },
+    { name: 'Hannah Price',    dept: 'Operations', gross: 0,    code: '1257L', ni: 'A', pension: true, prev: { gross: 1800, code: '1257L', ni: 'A', pension: true }, note: 'Unpaid leave', notReady: true },
+  ];
+  // Last 12 months of runs for this pay schedule (totals only - this is all the MVP gets for the year comparison)
+  const LAST_YEAR = { runs: 12, payslips: 150, totalCost: 250000 };
+  const EXCLUDED = [ { name: 'Ryan Doyle', dept: 'Warehouse' }, { name: 'Chloe Bennett', dept: 'Sales' } ];
+  // People paid in December who are no longer on the run
+  const PREV_LEAVERS = [
+    { name: 'Owen Hart',  gross: 2400, extras: { 'Car': 583.33 }, code: '1257L', ni: 'A', pension: true },
+    { name: 'Grace Lin',  gross: 1900, extras: { 'Living Accommodation': 8.33 }, code: '1257L', ni: 'A', pension: true },
+    { name: 'Ben Carter', gross: 2100, extras: {}, code: '1257L', ni: 'A', pension: true },
+  ];
+
+  const r2 = n => Math.round(n * 100) / 100;
+  function calc(s) {
+    const extras = Object.values(s.extras || {}).reduce((a, b) => a + b, 0);
+    const gross = s.gross + extras;
+    const paye = r2(s.code === '0T' ? gross * 0.2 : Math.max(0, gross - 1047.5) * 0.2);
+    const niEe = r2(s.ni === 'C' ? 0 : Math.max(0, gross - 1048) * 0.08);
+    const niEr = r2(Math.max(0, gross - 417) * 0.15);
+    const penEe = r2(s.pension ? Math.max(0, gross - 520) * 0.05 : 0);
+    const penEr = r2(s.pension ? Math.max(0, gross - 520) * 0.03 : 0);
+    const net = r2(gross - paye - niEe - penEe);
+    return { basic: s.gross, extras: s.extras || {}, gross, paye, niEe, niEr, penEe, penEr, net, cost: r2(gross + niEr + penEr) };
+  }
+  EMP.forEach(e => { e.now = calc(e); e.was = e.prev ? calc(e.prev) : null; });
+  PREV_LEAVERS.forEach(l => { l.was = calc(l); });
+
+  const sum = (arr, f) => r2(arr.reduce((a, x) => a + f(x), 0));
+  const cur = {
+    count: EMP.length,
+    gross: sum(EMP, e => e.now.gross), paye: sum(EMP, e => e.now.paye), niEe: sum(EMP, e => e.now.niEe), niEr: sum(EMP, e => e.now.niEr),
+    penEe: sum(EMP, e => e.now.penEe), penEr: sum(EMP, e => e.now.penEr), net: sum(EMP, e => e.now.net), basic: sum(EMP, e => e.now.basic),
+  };
+  cur.tax = r2(cur.paye + cur.niEe + cur.penEe);
+  cur.cost = r2(cur.gross + cur.niEr + cur.penEr);
+  const prevRows = EMP.filter(e => e.was).map(e => e.was).concat(PREV_LEAVERS.map(l => l.was));
+  const prev = {
+    count: prevRows.length,
+    gross: sum(prevRows, w => w.gross), paye: sum(prevRows, w => w.paye), niEe: sum(prevRows, w => w.niEe), niEr: sum(prevRows, w => w.niEr),
+    penEe: sum(prevRows, w => w.penEe), penEr: sum(prevRows, w => w.penEr), net: sum(prevRows, w => w.net), basic: sum(prevRows, w => w.basic),
+  };
+  prev.tax = r2(prev.paye + prev.niEe + prev.penEe);
+  function itemTotals(rows) { const t = {}; rows.forEach(w => Object.entries(w.extras).forEach(([k, v]) => { t[k] = r2((t[k] || 0) + v); })); return t; }
+  cur.items = itemTotals(EMP.map(e => e.now));
+  prev.items = itemTotals(prevRows);
+  const ITEM_NAMES = [...new Set(Object.keys(cur.items).concat(Object.keys(prev.items)))];
+
+  const gbp = n => '£' + Math.abs(n).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const gbp0 = n => '£' + Math.round(Math.abs(n)).toLocaleString('en-GB');
+  const num = n => Math.abs(n).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const pct = (a, b) => b ? ((a - b) / b * 100) : 0;
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+
+  // ---------- Tiles ----------
+  function tile(lbl, val, delta, prevTxt) {
+    const down = delta.startsWith('-') || delta.startsWith('−');
+    return '<div class="card tile"><div class="lbl">' + lbl + '</div><div class="val">' + val + '</div>'
+      + '<div class="delta ' + (down ? 'down' : 'up') + '">' + (down ? '▼ ' : '▲ ') + delta + '</div><div class="prev">Previous: ' + prevTxt + '</div></div>';
+  }
+  document.getElementById('tiles').innerHTML =
+    tile('Employees', cur.count, (cur.count - prev.count > 0 ? '+' : '') + (cur.count - prev.count), prev.count)
+    + tile('Gross Pay', gbp(cur.gross), pct(cur.gross, prev.gross).toFixed(1) + '%', gbp(prev.gross))
+    + tile('Tax', gbp(cur.tax), pct(cur.tax, prev.tax).toFixed(1) + '%', gbp(prev.tax))
+    + tile('Net Pay', gbp(cur.net), pct(cur.net, prev.net).toFixed(1) + '%', gbp(prev.net));
+
+  // ---------- Pies ----------
+  function pie(svgId, legId, parts) {
+    const total = parts.reduce((a, p) => a + p.v, 0);
+    const cx = 100, cy = 80, R = 68;
+    let a0 = -Math.PI / 2, out = '';
+    parts.forEach(p => {
+      if (p.v <= 0) return;
+      const a1 = a0 + p.v / total * 2 * Math.PI;
+      const x0 = cx + R * Math.cos(a0), y0 = cy + R * Math.sin(a0), x1 = cx + R * Math.cos(a1), y1 = cy + R * Math.sin(a1);
+      const large = a1 - a0 > Math.PI ? 1 : 0;
+      const full = p.v === total;
+      out += full ? '<circle cx="' + cx + '" cy="' + cy + '" r="' + R + '" fill="' + p.c + '"/>'
+        : '<path d="M' + cx + ' ' + cy + 'L' + x0.toFixed(2) + ' ' + y0.toFixed(2) + 'A' + R + ' ' + R + ' 0 ' + large + ' 1 ' + x1.toFixed(2) + ' ' + y1.toFixed(2) + 'Z" fill="' + p.c + '" stroke="#fff" stroke-width="1"/>';
+      const am = (a0 + a1) / 2, share = p.v / total;
+      if (share >= 0.06) {
+        const lx = cx + R * 0.62 * Math.cos(am), ly = cy + R * 0.62 * Math.sin(am);
+        out += '<text x="' + lx.toFixed(1) + '" y="' + (ly + 4).toFixed(1) + '" text-anchor="middle">' + Math.round(share * 100) + '%</text>';
+      }
+      a0 = a1;
+    });
+    document.getElementById(svgId).innerHTML = out;
+    document.getElementById(legId).innerHTML = parts.map(p => '<span><i style="background:' + p.c + '"></i>' + p.n + '</span>').join('');
+  }
+  const DEPT_COLOURS = { Operations: '#4a90e2', Sales: '#5cb8a4', Finance: '#9b7fd4', Warehouse: '#f0ad4e' };
+  const depts = [...new Set(EMP.map(e => e.dept))];
+  pie('pieDept', 'legDept', depts.map(d => ({ n: d, v: sum(EMP.filter(e => e.dept === d), e => e.now.gross), c: DEPT_COLOURS[d] })));
+  pie('pieNet', 'legNet', [ { n: 'Net', v: cur.net, c: '#4a90e2' }, { n: 'Pension', v: cur.penEe, c: '#5cb85c' }, { n: 'NIC', v: cur.niEe, c: '#f0c040' }, { n: 'PAYE', v: cur.paye, c: '#f28b50' } ]);
+
+  // ---------- Tables ----------
+  document.getElementById('tbDed').innerHTML =
+    '<tr><td>Pension</td><td>' + gbp(cur.penEe) + '</td><td>' + gbp(cur.penEr) + '</td></tr>'
+    + '<tr><td>NIC</td><td>' + gbp(cur.niEe) + '</td><td>' + gbp(cur.niEr) + '</td></tr>'
+    + '<tr><td>PAYE</td><td>' + gbp(cur.paye) + '</td><td>£0.00</td></tr>';
+
+  const starters = EMP.filter(e => e.starter);
+  document.getElementById('hStarters').textContent = 'New Starters (' + starters.length + ')';
+  document.getElementById('starters').innerHTML = starters.length
+    ? '<table><thead><tr><th>Name</th><th>Dept</th><th>Start date</th><th>Gross (£)</th></tr></thead><tbody>' + starters.map(e => '<tr><td>' + e.name + '</td><td>' + e.dept + '</td><td>' + e.startDate + '</td><td>' + gbp(e.now.gross) + '</td></tr>').join('') + '</tbody></table>'
+    : '<div class="empty">No new starters this period.</div>';
+
+  const earnRow = e => '<tr><td>' + e.name + '</td><td>' + e.dept + '</td><td>' + gbp(e.now.gross) + '</td><td>' + gbp(e.now.net) + '</td></tr>';
+  document.getElementById('tbTop').innerHTML = [...EMP].sort((a, b) => b.now.gross - a.now.gross).slice(0, 5).map(earnRow).join('');
+  document.getElementById('tbBottom').innerHTML = [...EMP].sort((a, b) => a.now.gross - b.now.gross).slice(0, 5).map(earnRow).join('');
+
+  const movers = EMP.filter(e => e.was).map(e => ({ e, d: r2(e.now.net - e.was.net) })).sort((a, b) => Math.abs(b.d) - Math.abs(a.d)).slice(0, 5);
+  document.getElementById('hMovers').textContent = 'Biggest Month-on-Month Movers (' + movers.length + ')';
+  document.getElementById('tbMovers').innerHTML = movers.map(({ e, d }) => {
+    const reasons = [];
+    if (e.now.gross !== e.was.gross) {
+      const why = e.note ? ' (' + e.note + ')' : (() => { const k = Object.keys(e.now.extras).concat(Object.keys(e.was.extras)).find(k => (e.now.extras[k] || 0) !== (e.was.extras[k] || 0)); return k ? ' (' + k + ')' : ''; })();
+      reasons.push('Gross pay ' + (e.now.gross > e.was.gross ? 'increased' : 'decreased') + ' by ' + num(e.now.gross - e.was.gross) + why);
+    }
+    else if (e.now.paye !== e.was.paye) reasons.push('PAYE ' + (e.now.paye > e.was.paye ? 'increased' : 'decreased') + ' by ' + num(e.now.paye - e.was.paye));
+    if (e.now.niEe !== e.was.niEe && e.now.gross === e.was.gross) reasons.push('Employee NI ' + (e.now.niEe > e.was.niEe ? 'increased' : 'decreased') + ' by ' + num(e.now.niEe - e.was.niEe));
+    const tag = e.change && e.change.type === 'Tax Code' ? '<small><span class="tag blue">Tax code: ' + e.change.from + ' → ' + e.change.to + '</span></small>' : e.change && e.change.type === 'NI Letter' ? '<small><span class="tag purple">NI letter: ' + e.change.from + ' → ' + e.change.to + '</span></small>' : '';
+    const p = e.was.net ? (d / e.was.net * 100) : 0;
+    return '<tr><td>' + e.name + '</td><td>' + gbp(e.now.net) + '</td><td>' + gbp(e.was.net) + '</td><td>' + (d < 0 ? '£-' : '£') + num(d) + '</td><td>' + (p > 0 ? '+' : '') + p.toFixed(1) + '%</td><td class="reason">' + reasons.join('<br>') + tag + '</td></tr>';
+  }).join('');
+
+  const codes = EMP.filter(e => e.change);
+  document.getElementById('hCodes').textContent = 'Code & Category Changes (' + codes.length + ')';
+  document.getElementById('tbCodes').innerHTML = codes.map(e => {
+    const c = e.change;
+    return '<tr><td>' + e.name + '</td><td><span class="tag ' + (c.type === 'Tax Code' ? 'blue' : 'purple') + '">' + c.type + '</span></td><td>' + c.period + '</td><td><span class="tag ' + (c.from === '—' ? 'grey' : 'red') + '">' + c.from + '</span><span class="arrow">→</span><span class="tag green">' + c.to + '</span></td><td>' + c.source + '</td></tr>';
+  }).join('');
+
+  const ae = EMP.filter(e => e.ae);
+  document.getElementById('hAe').textContent = 'Auto Enrolment this payroll (' + ae.length + ')';
+  document.getElementById('ae').innerHTML = ae.length
+    ? '<table><thead><tr><th>Employee</th><th>Action</th><th>Detail</th></tr></thead><tbody>' + ae.map(e => '<tr><td>' + e.name + '</td><td><span class="tag blue">Postponement</span></td><td>' + e.ae + '</td></tr>').join('') + '</tbody></table>'
+    : '<div class="empty">No enrolments, re-enrolments, postponements, or contribution notices this payroll.</div>';
+
+  const EXC = [];
+  EMP.filter(e => e.now.net === 0).forEach(e => EXC.push({ name: e.name, type: 'Payslip has no net pay', detail: e.note || '-' }));
+  EMP.filter(e => e.now.gross === 0).forEach(e => EXC.push({ name: e.name, type: 'Payslip has no gross pay', detail: e.note || '-' }));
+  EXCLUDED.forEach(x => EXC.push({ name: x.name, type: 'Payslip excluded from processing', detail: '-' }));
+  document.getElementById('hExc').textContent = 'Exceptions (' + EXC.length + ')';
+  const excTypes = [...new Set(EXC.map(x => x.type))];
+  let excFilter = 'All';
+  function renderExc() {
+    document.getElementById('excFilters').innerHTML = ['All'].concat(excTypes).map(t => '<button type="button" data-t="' + esc(t) + '" aria-pressed="' + (t === excFilter) + '">' + t + ' (' + (t === 'All' ? EXC.length : EXC.filter(x => x.type === t).length) + ')</button>').join('');
+    document.getElementById('tbExc').innerHTML = EXC.filter(x => excFilter === 'All' || x.type === excFilter).map(x => '<tr><td>' + x.name + '</td><td>' + x.type + '</td><td>' + x.detail + '</td></tr>').join('');
+  }
+  document.getElementById('excFilters').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; excFilter = b.dataset.t; renderExc(); });
+  renderExc();
+
+  document.getElementById('tbDept').innerHTML = depts.map(d => { const rows = EMP.filter(e => e.dept === d); return '<tr><td>' + d + '</td><td>' + gbp(sum(rows, e => e.now.gross)) + '</td><td>' + gbp(sum(rows, e => e.now.net)) + '</td><td>' + gbp(sum(rows, e => e.now.cost)) + '</td></tr>'; }).join('');
+
+  const picRows = [['Basic Salary', cur.basic, prev.basic]].concat(ITEM_NAMES.map(k => [k, cur.items[k] || 0, prev.items[k] || 0])).concat([
+    ['NIC (Employer)', cur.niEr, prev.niEr], ['NIC (Employee)', cur.niEe, prev.niEe], ['Pension (Employee)', cur.penEe, prev.penEe], ['PAYE', cur.paye, prev.paye], ['Pension (Employer)', cur.penEr, prev.penEr],
+  ]).sort((a, b) => Math.abs(b[1] - b[2]) - Math.abs(a[1] - a[2]));
+  document.getElementById('tbPic').innerHTML = picRows.map(([n, a, b]) => { const d = r2(a - b); return '<tr><td>' + n + '</td><td class="num">' + gbp(a) + '</td><td class="num">' + gbp(b) + '</td><td class="num diff' + (d > 0 ? ' up' : '') + '">' + (d > 0 ? '↑ ' : d < 0 ? '↓ ' : '') + gbp(d) + '</td><td class="num diff' + (d > 0 ? ' up' : '') + '">' + (b ? pct(a, b).toFixed(1) + '%' : 'new') + '</td></tr>'; }).join('');
+
+  document.getElementById('totalCost').innerHTML = gbp(cur.cost) + '<small>(Gross: ' + num(cur.gross) + ', Employer Tax: ' + num(cur.niEr + cur.penEr) + ')</small>';
+
+  const notReady = EMP.filter(e => e.notReady);
+  document.getElementById('warnTitle').textContent = notReady.length + ' Employees Not Ready';
+  document.getElementById('warnText').textContent = notReady.length + ' employees are not ready for processing. Please review their payslip status.';
+  document.getElementById('warnList').innerHTML = notReady.map(e => '<li>' + e.name + ' - ' + (e.note ? e.note + ', payslip not saved' : 'new starter, payslip not saved') + '</li>').join('');
+  document.getElementById('warnToggle').addEventListener('click', () => { const l = document.getElementById('warnList'); l.hidden = !l.hidden; document.getElementById('warnToggle').textContent = l.hidden ? '⌄ Show List' : '⌃ Hide List'; });
+
+  // ================================================================
+  // ASKMOORE - the pay run summary. Text is built from the computed figures so it always matches the page.
+  // ================================================================
+  const nm = n => '<span class="nm">' + n + '</span>';
+  const leaverNames = PREV_LEAVERS.map(l => l.name);
+  const leaverCost = sum(PREV_LEAVERS, l => l.was.gross);
+  const codeMovers = EMP.filter(e => e.change && e.change.type === 'Tax Code' && e.was);
+  const codeDrop = codeMovers.length ? Math.round(Math.abs(codeMovers[0].now.net - codeMovers[0].was.net) / 5) * 5 : 0;
+  const niChange = EMP.find(e => e.change && e.change.type === 'NI Letter');
+  const unpaid = EMP.filter(e => e.now.gross === 0);
+  const starter = starters[0];
+  const WORDS = ['no','One','Two','Three','Four','Five','Six','Seven','Eight','Nine'];
+  const word = n => WORDS[n] || String(n);
+  const list = arr => arr.length <= 1 ? arr.join('') : arr.slice(0, -1).join(', ') + ' and ' + arr[arr.length - 1];
+
+  const bonusTotal = cur.items['Bonus'] || 0, otDiff = r2((cur.items['Overtime'] || 0) - (prev.items['Overtime'] || 0));
+  const dropped = ITEM_NAMES.filter(k => (prev.items[k] || 0) > 0 && !(cur.items[k] || 0));
+  const yearAvgRun = LAST_YEAR.totalCost / LAST_YEAR.runs, yearAvgSlip = LAST_YEAR.totalCost / LAST_YEAR.payslips;
+  const prevCost = r2(prev.gross + prev.niEr + prev.penEr);
+  const excSlips = new Set(EXC.map(x => x.name)).size;
+
+  const SUMMARIES = {
+    // AIM - the model sees individual payslips, so it can name people and explain why.
+    aim: {
+      headline: "You're paying " + cur.count + ' people ' + gbp0(cur.net) + ' net this month, ' + gbp0(cur.cost) + ' all in once employer NI and pension are included. That\'s ' + Math.round(Math.abs(pct(cur.cost, prevCost))) + '% less than ' + RUN.prevLabel + '.',
+      changed: word(leaverNames.length) + ' people have come off the run since December (' + list(leaverNames.map(nm)) + '), which explains most of the drop - their pay, car allowance and accommodation came to ' + gbp0(leaverCost) + '. '
+        + (starter ? nm(starter.name) + ' started on ' + starter.startDate.replace(/(\d+)(st|nd|rd|th)/, '$1') + ' and is postponed for auto enrolment until 1 April. ' : '')
+        + (bonusTotal ? nm(EMP.find(e => e.now.extras['Bonus']).name) + ' has a ' + gbp0(bonusTotal) + ' bonus, and warehouse overtime is up ' + gbp0(otDiff) + '. ' : '')
+        + (unpaid.length ? nm(unpaid[0].name) + ' is on unpaid leave, so her payslip is £0.' : ''),
+      look: list(codeMovers.map(e => nm(e.name))) + ' each take home about £' + codeDrop + ' less because their tax code moved from ' + codeMovers[0].change.from + ' to ' + codeMovers[0].change.to + '. Both changes were entered manually - worth confirming they were intended before payslips go out. '
+        + (niChange ? nm(niChange.name) + "'s NI letter changed from " + niChange.change.from + ' to ' + niChange.change.to + ', so no employee NI was taken from her pay this month.' : ''),
+      before: word(notReady.length) + " employees aren't ready for processing (" + list(notReady.map(e => nm(e.name))) + ') and ' + EXCLUDED.length + ' payslips are excluded from this run (' + list(EXCLUDED.map(x => nm(x.name))) + '). Nothing else is blocking - once those are sorted you can conclude the run.',
+      scope: 'Written by AskMoore from this pay run\'s figures. Check anything you rely on.',
+    },
+    // MVP - the model only gets run totals: counts, costs, pay item totals with month-on-month variance. No names.
+    mvp: {
+      headline: cur.count + ' payslips this month at a total cost of ' + gbp0(cur.cost) + ' - ' + Math.round(Math.abs(pct(cur.cost, prevCost))) + '% less than last month and ' + Math.round(Math.abs(pct(cur.cost, yearAvgRun))) + '% ' + (cur.cost < yearAvgRun ? 'below' : 'above') + ' your monthly average over the past year.',
+      changed: 'Gross pay is down ' + gbp0(prev.gross - cur.gross) + ' on last month. Basic salary fell ' + gbp0(prev.basic - cur.basic)
+        + (dropped.length ? ', and ' + list(dropped.map(d => d === 'Car' ? 'car allowance' : d.toLowerCase())) + ' have dropped off entirely' : '') + '. '
+        + (otDiff ? 'Overtime is ' + (otDiff > 0 ? 'up ' : 'down ') + gbp0(otDiff) : '') + (bonusTotal ? ' and there is a ' + gbp0(bonusTotal) + ' bonus this month that wasn\'t there last month' : '') + '. '
+        + word(prev.count - cur.count) + ' fewer payslips than last month, with ' + (starters.length === 1 ? 'one new starter' : starters.length + ' new starters') + ' and no leavers.',
+      look: 'Cost per payslip is ' + gbp0(cur.cost / cur.count) + ', up from an average of ' + gbp0(yearAvgSlip) + ' across last year\'s runs. Employer NI and pension make up ' + gbp0(cur.niEr + cur.penEr) + ' of this month\'s total.',
+      before: word(excSlips) + ' payslips have exceptions (' + EXC.length + ' between them). Check those before you conclude the run.',
+      scope: 'Written by AskMoore from this pay run\'s figures. Check anything you rely on.',
+    },
+  };
+
+  const SCOPE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>';
+  function askCard(kind) {
+    return '<section class="ask ' + kind + '-only" data-kind="' + kind + '" aria-live="polite">'
+      + '<div class="ask-head"><div class="ask-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9zM19 15l.9 2.6 2.6.9-2.6.9L19 22l-.9-2.6-2.6-.9 2.6-.9zM5 15l.7 1.8 1.8.7-1.8.7L5 20l-.7-1.8-1.8-.7 1.8-.7z"/></svg></div>'
+      + '<span class="ask-name">AskMoore</span><span class="ask-pill">New</span><span class="ask-status"><span class="dot"></span>Reading this pay run</span><span class="spacer"></span>'
+      + '<button class="ask-regen" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg>Regenerate</button></div>'
+      + '<p class="ask-headline"></p>'
+      + '<div class="ask-sections"><div class="ask-sec"><h4>What changed</h4><p class="sec-changed"></p></div><div class="ask-sec"><h4>Worth a look</h4><p class="sec-look"></p></div><div class="ask-sec"><h4>Before you conclude</h4><p class="sec-before"></p></div></div>'
+      + '<div class="ask-foot"><span class="scope">' + SUMMARIES[kind].scope + '</span><span class="ask-fb"><span>Was this useful?</span>'
+      + '<button type="button" data-fb="up" title="Useful" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12H3V10zM7 10l4-8a3 3 0 0 1 3 3v4h6a2 2 0 0 1 2 2.3l-1.4 7A2 2 0 0 1 18.6 22H7"/></svg></button>'
+      + '<button type="button" data-fb="down" title="Not useful" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14V2h4v12zM17 14l-4 8a3 3 0 0 1-3-3v-4H4a2 2 0 0 1-2-2.3l1.4-7A2 2 0 0 1 5.4 2H17"/></svg></button></span></div></section>';
+  }
+  document.getElementById('askCards').innerHTML = askCard('mvp') + askCard('aim');
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const askState = { mvp: { run: 0, done: false }, aim: { run: 0, done: false } };
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  async function typeInto(el, html, st, token) {
+    const parts = html.split(/(<span class="nm">.*?<\/span>|\s+)/).filter(Boolean);
+    el.innerHTML = ''; el.classList.add('caret-blink');
+    let acc = '';
+    for (const p of parts) {
+      if (token !== st.run) return;
+      acc += p; el.innerHTML = acc;
+      if (!/^\s+$/.test(p)) await sleep(p.startsWith('<span') ? 45 : 20);
+    }
+    el.classList.remove('caret-blink');
+  }
+  async function generate(kind) {
+    const st = askState[kind], S = SUMMARIES[kind], token = ++st.run;
+    const ask = document.querySelector('.ask[data-kind="' + kind + '"]');
+    const q = sel => ask.querySelector(sel);
+    const status = q('.ask-status'), regen = q('.ask-regen'), H = q('.ask-headline'), C = q('.sec-changed'), L = q('.sec-look'), B = q('.sec-before');
+    ask.querySelectorAll('.ask-fb button').forEach(b => b.setAttribute('aria-pressed', 'false'));
+    const thanks = q('.ask-thanks'); if (thanks) thanks.remove();
+    q('.ask-fb').hidden = false;
+    status.hidden = false; status.innerHTML = '<span class="dot"></span>Reading this pay run';
+    if (reduceMotion) { H.innerHTML = S.headline; C.innerHTML = S.changed; L.innerHTML = S.look; B.innerHTML = S.before; status.hidden = true; st.done = true; return; }
+    regen.disabled = true; ask.classList.add('loading');
+    H.innerHTML = '<span class="sk h16 w90"></span><span class="sk h16 w60"></span>';
+    C.innerHTML = '<span class="sk w90"></span><span class="sk w80"></span><span class="sk w60"></span>'; L.innerHTML = C.innerHTML; B.innerHTML = C.innerHTML;
+    await sleep(1400); if (token !== st.run) return;
+    ask.classList.remove('loading'); status.innerHTML = '<span class="dot"></span>Writing summary';
+    C.innerHTML = ''; L.innerHTML = ''; B.innerHTML = '';
+    for (const [el, txt] of [[H, S.headline], [C, S.changed], [L, S.look], [B, S.before]]) { await typeInto(el, txt, st, token); if (token !== st.run) return; }
+    status.hidden = true; regen.disabled = false; st.done = true;
+  }
+  document.getElementById('askCards').addEventListener('click', e => {
+    const ask = e.target.closest('.ask'); if (!ask) return;
+    const kind = ask.dataset.kind;
+    if (e.target.closest('.ask-regen')) { generate(kind); return; }
+    const b = e.target.closest('.ask-fb button'); if (!b) return;
+    ask.querySelectorAll('.ask-fb button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    const fb = ask.querySelector('.ask-fb');
+    const t = document.createElement('span'); t.className = 'ask-thanks';
+    t.textContent = b.dataset.fb === 'up' ? 'Thanks - noted.' : 'Thanks - we\'ll use that to improve it.';
+    fb.parentNode.appendChild(t); fb.hidden = true;
+  });
+
+  // ================================================================
+  // View switching
+  // ================================================================
+  const ORDER = ['current', 'mvp', 'aim'];
+  const TAGS = { current: 'Current', mvp: 'Proposed MVP', aim: 'Proposed Aim' };
+  let view = 'current';
+  try { const sv = localStorage.getItem('mp-summary-view'); if (ORDER.includes(sv)) view = sv; } catch (e) {}
+  function setView(v) {
+    view = v;
+    const app = document.getElementById('app');
+    ORDER.forEach(k => app.classList.toggle('view-' + k, v === k));
+    app.classList.toggle('view-proposed', v !== 'current');
+    document.getElementById('viewTag').textContent = TAGS[v];
+    document.querySelectorAll('.switch button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === v)));
+    renderNav(v === 'current' ? NAV_CURRENT : NAV_PROPOSED);
+    if (v !== 'current' && askState[v].run === 0) generate(v);
+    try { localStorage.setItem('mp-summary-view', v); } catch (e) {}
+  }
+  document.querySelectorAll('.switch button').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
+  document.addEventListener('keydown', e => {
+    if (e.target.matches('input, textarea')) return;
+    const i = ORDER.indexOf(view);
+    if (e.key === 'ArrowLeft' && i > 0) setView(ORDER[i - 1]);
+    if (e.key === 'ArrowRight' && i < ORDER.length - 1) setView(ORDER[i + 1]);
+  });
+  document.getElementById('sidenav').addEventListener('click', e => {
+    const a = e.target.closest('.nav-item'); if (!a) return; e.preventDefault();
+    document.querySelectorAll('.nav-item.active').forEach(x => x.classList.remove('active'));
+    a.classList.add('active');
+  });
+  setView(view);
+</script>
+
+<a class="fb-btn" href="../feedback.html?demo=pay-run-summary" target="_blank" rel="noopener" title="Tell us what you think of this preview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Give feedback</a>
+</body>
+</html>
