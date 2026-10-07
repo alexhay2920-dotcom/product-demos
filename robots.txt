@@ -1,2 +1,4 @@
 User-agent: *
 Disallow: /
+
+# Publishing test via GitHub Desktop route - 2026-10-07
