@@ -6,29 +6,38 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Moorepay Payroll - Roadmap Previews</title>
 <style>
-  :root { --navy: #002654; --ink: #1b1b1d; --ink-2: #4a4a4f; --bg: #f2f0f2; --card: #fcfcfc; --line: #c3c6cf; --accent: #6563de; --muted: #6b7280; }
+  :root { --navy: #002654; --navy-2: #0b3a7a; --ink: #1b1b1d; --ink-2: #4a4a4f; --bg: #ffffff; --tile: #eef0f3; --line: #e3e5ea; --accent: #6563de; --muted: #6b7280; }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink-2); font: 15px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif; }
-  .topbar { background: var(--navy); height: 64px; display: flex; align-items: center; }
-  .topbar .inner { width: 100%; padding: 0 20px; display: flex; align-items: center; }
+  .topbar { background: var(--navy); height: 64px; display: flex; align-items: center; padding: 0 20px; }
   .topbar .logo { width: 172px; height: auto; display: block; }
-  .wrap { max-width: 880px; margin: 0 auto; padding: 40px 20px 64px; }
-  h1 { color: var(--ink); font-size: 30px; margin: 0 0 6px; }
-  .lede { margin: 0 0 32px; max-width: 620px; }
-  .area { margin-bottom: 36px; }
-  .area h2 { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
-  .card { display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 18px 20px; color: inherit; text-decoration: none; }
-  .card:hover { border-color: var(--accent); box-shadow: 0 4px 16px rgba(0,0,0,.06); }
-  .card h3 { margin: 0 0 6px; font-size: 17px; color: var(--ink); }
-  .card p { margin: 0 0 12px; font-size: 14px; flex: 1; }
-  .card .cta { font-size: 13px; font-weight: 600; color: var(--accent); }
-  footer { margin-top: 48px; font-size: 12.5px; color: var(--muted); }
+  .title { max-width: 880px; margin: 0 auto; padding: 48px 20px 28px; text-align: center; }
+  .title h1 { color: var(--ink); font-size: 38px; font-weight: 700; letter-spacing: -.01em; margin: 0 0 6px; text-wrap: balance; }
+  .title .lede { color: var(--ink-2); font-size: 22px; margin: 0; }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 8px 20px 64px; }
+  .area h2 { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 4px; }
+  .list { display: flex; flex-direction: column; }
+  .row { display: grid; grid-template-columns: 200px 1fr 24px; gap: 24px; align-items: center; padding: 22px 0; border-bottom: 1px solid var(--line); color: inherit; text-decoration: none; }
+  .row:last-child { border-bottom: 0; }
+  .thumb { background: var(--tile); border-radius: 14px; padding: 14px; display: flex; align-items: center; }
+  .thumb img { width: 100%; height: auto; display: block; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,.14); }
+  .row h3 { margin: 0 0 4px; font-size: 21px; font-weight: 700; color: var(--ink); letter-spacing: -.01em; }
+  .row p { margin: 0; font-size: 15px; color: var(--muted); line-height: 1.45; }
+  .row .chev { width: 24px; height: 24px; color: #b0b4bd; }
+  .row:hover h3 { color: var(--navy-2); }
+  .row:hover .chev { color: var(--navy-2); }
+  .row.soon { cursor: default; grid-template-columns: 200px 1fr auto; }
+  .soon-pill { font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--navy-2); background: #e8eef8; border-radius: 999px; padding: 5px 11px; white-space: nowrap; }
+  footer { margin-top: 40px; font-size: 12.5px; color: var(--muted); }
+  @media (max-width: 600px) {
+    .title h1 { font-size: 30px; } .title .lede { font-size: 18px; }
+    .row { grid-template-columns: 1fr; gap: 14px; }
+    .row .chev { display: none; } .row.soon { grid-template-columns: 1fr; } .soon-pill { justify-self: start; }
+  }
 </style>
 </head>
 <body>
-<header class="topbar"><div class="inner">
-<svg class="logo" viewBox="0 0 483.84 78.4" role="img" aria-label="Moorepay"><g fill="#fff">
+<header class="topbar"><svg class="logo" viewBox="0 0 483.84 78.4" role="img" aria-label="Moorepay"><g fill="#fff">
 <path d="M0,20.84c0-3.46.61-6.48,1.84-9.07,1.22-2.59,2.9-4.75,5.02-6.48s4.62-3.04,7.51-3.94c2.87-.9,6-1.35,9.38-1.35,4.46,0,8.46.83,11.99,2.48,3.53,1.66,6.33,4.1,8.42,7.34,2.09-3.24,4.86-5.69,8.31-7.34,3.46-1.65,7.38-2.48,11.77-2.48,3.31,0,6.41.43,9.29,1.3,2.88.86,5.36,2.16,7.45,3.89s3.74,3.89,4.97,6.48c1.22,2.59,1.83,5.61,1.83,9.07v34.98h-12.31v-30.77c0-4.97-1.12-8.51-3.35-10.64-2.23-2.12-5.26-3.18-9.07-3.18s-6.75,1.19-9.23,3.56c-2.48,2.38-3.72,6.23-3.72,11.55v29.48h-12.31v-29.48c0-5.33-1.24-9.18-3.73-11.55-2.48-2.38-5.56-3.56-9.23-3.56s-6.77,1.08-9.07,3.24c-2.3,2.16-3.46,5.72-3.46,10.69v30.67H0V20.84Z"/>
 <path d="M122.55,0c4.17,0,8.08.72,11.72,2.16,3.63,1.44,6.78,3.44,9.45,5.99,2.66,2.56,4.75,5.58,6.26,9.07s2.27,7.29,2.27,11.39-.76,7.79-2.27,11.28c-1.51,3.49-3.6,6.52-6.26,9.07-2.66,2.56-5.81,4.57-9.45,6.05-3.64,1.47-7.54,2.21-11.72,2.21s-8.08-.74-11.72-2.21c-3.64-1.48-6.79-3.49-9.45-6.05-2.66-2.56-4.75-5.58-6.26-9.07-1.51-3.49-2.27-7.25-2.27-11.28s.76-7.9,2.27-11.39c1.51-3.49,3.6-6.51,6.26-9.07,2.66-2.55,5.81-4.55,9.45-5.99,3.64-1.44,7.54-2.16,11.72-2.16M122.55,46.32c2.45,0,4.71-.45,6.8-1.35,2.09-.9,3.87-2.16,5.34-3.78s2.63-3.49,3.46-5.62c.83-2.12,1.24-4.44,1.24-6.96s-.42-4.88-1.24-7.07c-.83-2.2-1.98-4.08-3.46-5.67-1.48-1.58-3.26-2.82-5.34-3.73-2.09-.9-4.36-1.35-6.8-1.35s-4.81.45-6.86,1.35c-2.05.9-3.82,2.14-5.29,3.73-1.48,1.58-2.63,3.47-3.46,5.67s-1.24,4.55-1.24,7.07.41,4.84,1.24,6.96c.83,2.12,1.98,4,3.46,5.62,1.47,1.62,3.24,2.88,5.29,3.78,2.05.9,4.33,1.35,6.86,1.35"/>
 <path d="M184.85,0c4.17,0,8.08.72,11.72,2.16,3.63,1.44,6.78,3.44,9.45,5.99,2.66,2.56,4.75,5.58,6.26,9.07s2.27,7.29,2.27,11.39-.76,7.79-2.27,11.28c-1.51,3.49-3.6,6.52-6.26,9.07-2.66,2.56-5.81,4.57-9.45,6.05-3.64,1.47-7.54,2.21-11.72,2.21s-8.08-.74-11.72-2.21c-3.63-1.48-6.79-3.49-9.45-6.05-2.66-2.56-4.75-5.58-6.26-9.07-1.51-3.49-2.27-7.25-2.27-11.28s.76-7.9,2.27-11.39c1.51-3.49,3.6-6.51,6.26-9.07,2.66-2.55,5.81-4.55,9.45-5.99,3.64-1.44,7.55-2.16,11.72-2.16M184.85,46.32c2.45,0,4.71-.45,6.8-1.35,2.09-.9,3.87-2.16,5.34-3.78s2.63-3.49,3.46-5.62c.83-2.12,1.24-4.44,1.24-6.96s-.41-4.88-1.24-7.07c-.83-2.2-1.98-4.08-3.46-5.67-1.48-1.58-3.26-2.82-5.34-3.73-2.09-.9-4.36-1.35-6.8-1.35s-4.81.45-6.86,1.35c-2.05.9-3.82,2.14-5.29,3.73-1.48,1.58-2.63,3.47-3.46,5.67s-1.24,4.55-1.24,7.07.41,4.84,1.24,6.96,1.98,4,3.46,5.62c1.47,1.62,3.24,2.88,5.29,3.78,2.05.9,4.33,1.35,6.86,1.35"/>
@@ -37,37 +46,41 @@
 <path d="M312.15,31.1c0-5.04.72-9.48,2.16-13.34,1.44-3.85,3.46-7.09,6.05-9.72s5.72-4.62,9.4-5.99C333.43.68,337.49,0,341.96,0,346.06,0,349.84.72,353.3,2.16s6.46,3.42,9.02,5.94c2.55,2.52,4.55,5.54,5.99,9.07,1.44,3.53,2.16,7.34,2.16,11.45s-.7,8.01-2.1,11.5-3.35,6.5-5.83,9.01c-2.48,2.52-5.4,4.48-8.75,5.89-3.35,1.4-7,2.1-10.96,2.1s-7.74-.79-10.91-2.38c-3.17-1.58-5.65-3.53-7.45-5.83v28.4h-12.31V31.1h0ZM341.09,46.21c2.45,0,4.69-.45,6.75-1.35,2.05-.9,3.81-2.14,5.29-3.73,1.48-1.58,2.61-3.46,3.4-5.61.79-2.16,1.19-4.5,1.19-7.02s-.4-4.73-1.19-6.86c-.79-2.12-1.92-3.96-3.4-5.51-1.47-1.55-3.24-2.77-5.29-3.67-2.05-.9-4.3-1.35-6.75-1.35s-4.7.43-6.75,1.29-3.82,2.05-5.29,3.56c-1.48,1.51-2.63,3.33-3.46,5.45-.83,2.12-1.24,4.48-1.24,7.07s.41,4.86,1.24,7.02,1.96,4.03,3.4,5.61,3.18,2.83,5.24,3.73c2.05.9,4.33,1.35,6.86,1.35"/>
 <path d="M425.21,55.5c-.72.15-1.86.3-3.4.49-1.55.18-3.36.36-5.45.54-2.09.18-4.43.34-7.02.49-2.59.14-5.29.22-8.1.22-5.62,0-10.21-.48-13.77-1.46-3.56-.97-6.37-2.27-8.42-3.89-2.05-1.62-3.45-3.49-4.21-5.61-.76-2.12-1.13-4.3-1.13-6.53,0-2.95.45-5.54,1.35-7.77s2.37-4.1,4.43-5.62c2.05-1.51,4.73-2.64,8.04-3.4s7.34-1.13,12.1-1.13c2.73,0,5.33.09,7.77.27,2.45.18,4.28.34,5.51.49,0-2.52-.41-4.61-1.24-6.26s-1.96-2.95-3.4-3.89c-1.45-.93-3.17-1.58-5.18-1.94-2.02-.36-4.25-.54-6.69-.54-4.1,0-7.4.47-9.88,1.4-2.48.94-4.12,1.73-4.91,2.38-.43-.36-1.03-1.04-1.78-2.05-.76-1.01-1.13-2.23-1.13-3.67,0-1.01.27-2,.81-2.97s1.49-1.84,2.86-2.59c1.36-.76,3.2-1.35,5.51-1.78,2.27-.46,5.18-.68,8.71-.68,4.25,0,8.11.42,11.61,1.24,3.49.83,6.49,2.14,9.02,3.94,2.52,1.8,4.48,4.18,5.88,7.13,1.41,2.95,2.11,6.52,2.11,10.69v32.5h0ZM413,31.53c-.72-.14-2.07-.36-4.05-.65-1.98-.29-4.95-.43-8.91-.43-4.9,0-8.46.74-10.69,2.21-2.23,1.48-3.35,3.8-3.35,6.96,0,1.3.23,2.48.7,3.56s1.28,2,2.43,2.75c1.15.76,2.72,1.33,4.7,1.73,1.98.4,4.45.59,7.4.59,3.31,0,5.94-.12,7.88-.38,1.95-.25,3.24-.45,3.89-.59v-15.77.02Z"/>
 <path d="M431.14,7.24c0-1.94.57-3.38,1.73-4.32,1.15-.94,2.73-1.4,4.75-1.4,1.3,0,2.5.16,3.62.49,1.11.32,1.85.56,2.21.7v28.83c0,4.25,1.13,7.63,3.4,10.15s5.78,3.78,10.53,3.78c4.39,0,7.84-1.28,10.37-3.83,2.52-2.55,3.78-6.32,3.78-11.28V7.24c0-1.94.57-3.38,1.73-4.32,1.15-.94,2.73-1.4,4.75-1.4,1.3,0,2.5.16,3.62.49,1.11.32,1.85.56,2.21.7v47.29c0,5.11-.68,9.45-2.05,13.01-1.37,3.56-3.31,6.49-5.83,8.8-2.52,2.3-5.55,3.98-9.07,5.02-3.53,1.04-7.45,1.57-11.77,1.57-2.95,0-5.65-.16-8.1-.49-2.45-.32-4.62-.7-6.53-1.13s-3.47-.85-4.7-1.24c-1.22-.4-2.09-.7-2.59-.92.58-1.51,1.11-3.04,1.62-4.59.5-1.55,1.01-3.08,1.51-4.59.51.22,1.3.5,2.38.86,1.08.36,2.38.7,3.89,1.03,1.51.32,3.22.59,5.13.81s3.94.32,6.1.32c2.81,0,5.33-.31,7.56-.92s4.12-1.67,5.67-3.19c1.55-1.51,2.73-3.51,3.56-5.99s1.24-5.6,1.24-9.34c-1.44,2.09-3.69,3.76-6.75,5.02-3.06,1.26-6.42,1.89-10.09,1.89-3.46,0-6.66-.49-9.61-1.46-2.95-.97-5.47-2.38-7.56-4.21-2.09-1.84-3.73-4.12-4.91-6.86-1.18-2.73-1.78-5.87-1.78-9.39V7.24h-.02Z"/>
-</g></svg>
-</div></header>
+</g></svg></header>
+<div class="title">
+    <h1>Roadmap Previews</h1>
+    <p class="lede">See what's coming to Moorepay Payroll.</p>
+</div>
 <div class="wrap">
-  <h1>Roadmap Previews</h1>
-  <p class="lede">A preview of what's coming to Moorepay Payroll. Click any card to see a working preview of the feature as we're building it.</p>
 
   <!--
-    DEMOS: one card per demo, grouped by product area. Keep this list in step with the folders.
+    DEMOS: one row per demo, grouped by product area. Keep this list in step with the folders.
     This page is customer-facing (Sales share it on screen), so: only committed roadmap items,
-    no owner names, dates, status tags or internal wording. Card fields: title, one-line
-    customer-facing description, "See the preview" link text.
+    no owner names, dates, status tags or internal wording. Row fields: thumbnail
+    (thumbs/<demo-name>.jpg, 720x450 - either a screenshot of the Proposed view with the demo
+    chrome hidden, or a drawn tile when a screenshot does not read at this size), title,
+    one-line customer-facing description. A feature with no demo yet is a <div class="row soon">
+    with a "Preview coming soon" pill instead of a link and chevron.
   -->
 
   <section class="area" id="area-payroll">
     <h2>Payroll</h2>
-    <div class="grid">
-      <a class="card" href="home-screen/">
-        <h3>Home screen</h3>
-        <p>Everything you need at a glance when you log in: your next pay run, payroll costs, employee changes and key dates for the month.</p>
-        <span class="cta">See the preview &rarr;</span>
+    <div class="list">
+      <a class="row" href="home-screen/">
+        <div class="thumb"><img src="thumbs/home-screen.jpg" alt="" width="720" height="450"></div>
+        <div><h3>Home screen</h3><p>Everything you need at a glance when you log in: your next pay run, payroll costs, employee changes and key dates for the month.</p></div>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
       </a>
-      <a class="card" href="pay-run-summary/">
-        <h3>Pay Run Summary</h3>
-        <p>A plain-English summary of each pay run before you approve it: what changed since last time, what to check, and why.</p>
-        <span class="cta">See the preview &rarr;</span>
+      <a class="row" href="pay-run-summary/">
+        <div class="thumb"><img src="thumbs/pay-run-summary.jpg" alt="" width="720" height="450"></div>
+        <div><h3>Pay Run Summary</h3><p>A plain-English summary of each pay run before you approve it: what changed since last time, what to check, and why.</p></div>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
       </a>
-      <a class="card" href="run-payroll/">
-        <h3>Run Payroll</h3>
-        <p>A simpler pay run with payslips calculated for you by default, clear tabs for payslips, pay notes, reports and exceptions, and a single button to move on.</p>
-        <span class="cta">See the preview &rarr;</span>
-      </a>
+      <div class="row soon">
+        <div class="thumb"><img src="thumbs/pay-run-automation.jpg" alt="" width="720" height="450"></div>
+        <div><h3>Pay Run Automation</h3><p>Schedule the routine tasks in a pay run - submitting your FPS, applying tax codes, sending pension contributions - and let them happen on time without you.</p></div>
+        <span class="soon-pill">Preview coming soon</span>
+      </div>
     </div>
   </section>
 
